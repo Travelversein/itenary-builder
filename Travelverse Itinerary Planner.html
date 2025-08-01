@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -426,7 +427,7 @@
             padding: 20px;
             transition: all 0.3s ease;
             overflow: hidden;
-            max-height: 2000px; /* Set a large max-height for expansion animation */
+            max-height: none;
         }
 
         .collapsible.collapsed .card-content {
@@ -434,18 +435,8 @@
             padding-top: 0;
             padding-bottom: 0;
             opacity: 0;
-            border-top: none;
-        }
-        
-        .collapsible.collapsed .card-header {
-             border-radius: var(--radius-m);
-             border-bottom: none;
         }
 
-        .collapsible {
-            margin-bottom: 20px;
-        }
-        
         .collapsible.collapsed {
             margin-bottom: 10px;
         }
@@ -459,24 +450,21 @@
         }
 
         .section-control-btn {
-            background: var(--card-bg-color);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
+            background: var(--brand-blue);
+            color: white;
+            border: none;
             padding: 8px 16px;
             border-radius: var(--radius-m);
             cursor: pointer;
             font-size: 0.9rem;
             transition: all 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .section-control-btn:hover {
-            background: var(--bg-color);
-            border-color: var(--brand-blue);
+            background: var(--brand-blue-light);
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }
-        
+        }
 
         /* Theme Toggle */
         .theme-toggle {
@@ -725,15 +713,10 @@
             background-color: var(--card-bg-color);
             border-radius: var(--radius-l);
             box-shadow: var(--shadow);
-            padding: 0; /* Changed for collapsible sections */
-            margin-bottom: 20px; /* Adjusted margin */
+            padding: 35px 40px;
+            margin-bottom: 30px;
             border: 1px solid rgba(0,0,0,0.05);
             animation: fadeIn 0.5s ease-out;
-        }
-        
-        /* Original card padding moved to card-content */
-        .card > .card-content {
-             padding: 35px 40px;
         }
 
         h2 {
@@ -1091,10 +1074,9 @@
                 <span class="progress-text" id="progressText">0% Complete</span>
             </div>
         </header>
-        
         <div class="section-controls">
-            <button class="section-control-btn" onclick="toggleAllSections(true)">📖 Expand All</button>
-            <button class="section-control-btn" onclick="toggleAllSections(false)">📚 Collapse All</button>
+            <button class="section-control-btn" onclick="toggleAllSections(true)">📖 Expand All Sections</button>
+            <button class="section-control-btn" onclick="toggleAllSections(false)">📚 Collapse All Sections</button>
         </div>
 
         <div id="error-display" class="hidden"></div>
@@ -1226,15 +1208,10 @@
             <div id="trainActions" class="action-buttons">
                 <button class="btn-secondary" onclick="addTrain()">+ Add Train</button>
             </div>
-            </div>
         </div>
 
-        <div class="card collapsible" id="busDetailsCard">
-            <div class="card-header" onclick="toggleSection('busDetailsCard')">
-                <h2>🚌 Bus Details</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>🚌 Bus Details</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="busName">Bus Name/Operator</label>
@@ -1258,15 +1235,10 @@
             <div id="busActions" class="action-buttons">
                 <button class="btn-secondary" onclick="addBus()">+ Add Bus</button>
             </div>
-            </div>
         </div>
         
-        <div class="card collapsible" id="transfersCard">
-            <div class="card-header" onclick="toggleSection('transfersCard')">
-                <h2>🚗 Airport/Train Station Transfers</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>🚗 Airport/Train Station Transfers</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="transferName">Transfer Name</label>
@@ -1290,15 +1262,10 @@
             <div id="transferActions" class="action-buttons">
                 <button class="btn-secondary" onclick="addTransfer()">+ Add Transfer</button>
             </div>
-            </div>
         </div>
 
-        <div class="card collapsible" id="hotelCard">
-            <div class="card-header" onclick="toggleSection('hotelCard')">
-                <h2>🏨 Hotel Accommodations</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>🏨 Hotel Accommodations</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="hotelName">Hotel Name</label>
@@ -1330,15 +1297,10 @@
             <div id="hotelActions" class="action-buttons">
                 <button class="btn-secondary" onclick="addHotel()">+ Add Hotel</button>
             </div>
-            </div>
         </div>
 
-        <div class="card collapsible" id="activitiesCard">
-            <div class="card-header" onclick="toggleSection('activitiesCard')">
-                <h2>🏞️ Activities & Tours</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>🏞️ Activities & Tours</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="activityName">Activity Name</label>
@@ -1366,15 +1328,10 @@
             <div id="activityActions" class="action-buttons">
                 <button class="btn-secondary" onclick="addActivity()">+ Add Activity</button>
             </div>
-            </div>
         </div>
         
-        <div class="card collapsible" id="weatherCard">
-            <div class="card-header" onclick="toggleSection('weatherCard')">
-                <h2>🌤️ Weather & Travel Info</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>🌤️ Weather & Travel Info</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="weatherLocation">Location for Weather</label>
@@ -1426,36 +1383,26 @@
             </div>
             <div id="weatherDisplay" class="weather-container"></div>
             <div id="insuranceDisplay" class="insurance-container"></div>
-            </div>
         </div>
 
 
 
-        <div class="card collapsible" id="costingCard">
-            <div class="card-header" onclick="toggleSection('costingCard')">
-                <h2>💰 Costing & Margin</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>💰 Costing & Margin</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="marginCost">Margin (₹)</label>
                     <input type="number" id="marginCost" placeholder="e.g., 10000.00" min="0">
                 </div>
             </div>
-            </div>
         </div>
 
 
 
 
 
-        <div class="card collapsible" id="inclusionsCard">
-            <div class="card-header" onclick="toggleSection('inclusionsCard')">
-                <h2>📦 Inclusions & Exclusions</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>📦 Inclusions & Exclusions</h2>
             <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 40px;">
                 <div>
                     <h3>Inclusions</h3>
@@ -1477,15 +1424,10 @@
             <div class="action-buttons" style="margin-top: 20px;">
                 <button class="btn-secondary" onclick="resetInclusionsExclusions()">🔄 Reset to Default</button>
             </div>
-            </div>
         </div>
         
-        <div class="card collapsible" id="timezoneCard">
-            <div class="card-header" onclick="toggleSection('timezoneCard')">
-                <h2>⏰ Time Zone Calculator</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>⏰ Time Zone Calculator</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="timezoneFrom">From Time Zone</label>
@@ -1528,15 +1470,10 @@
                 <button class="btn-secondary" onclick="showWorldClock()">🌍 World Clock</button>
             </div>
             <div id="timezoneDisplay" class="timezone-container"></div>
-            </div>
         </div>
 
-        <div class="card collapsible" id="visaCard">
-            <div class="card-header" onclick="toggleSection('visaCard')">
-                <h2>🛂 Visa & Travel Requirements</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>🛂 Visa & Travel Requirements</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="visaCountry">Destination Country</label>
@@ -1579,15 +1516,10 @@
                 </div>
             </div>
             <div id="visaDisplay" class="visa-container"></div>
-            </div>
         </div>
 
-        <div class="card collapsible" id="templatesCard">
-            <div class="card-header" onclick="toggleSection('templatesCard')">
-                <h2>📋 Template Management</h2>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="card-content">
+        <div class="card collapsible">
+            <h2>📋 Template Management</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label for="templateName">Template Name</label>
@@ -1604,15 +1536,13 @@
                 <button class="btn-secondary" onclick="loadTemplate()">📂 Load Template</button>
                 <button class="btn-secondary" onclick="showTemplates()">📋 View All Templates</button>
             </div>
-            </div>
         </div>
 
         <button class="btn-primary" onclick="generateItinerary(true)">Generate Travel Plan</button>
 
         <!-- ITINERARY OUTPUT SECTION -->
         <div id="itinerary" class="hidden">
-            <div class="card">
-             <div class="card-content">
+            <div class="card collapsible">
                 <h2>Trip Summary</h2>
                 <div class="itinerary-summary">
                     <div class="summary-item"><span class="icon">👤</span><div><strong>Name</strong><span id="itineraryClientName"></span></div></div>
@@ -1706,53 +1636,47 @@
                     <span>Total Estimated Cost: </span>₹<span id="totalCost">0.00</span>
                 </div>
 
-                <div class="card collapsible" id="pdfOptionsCard">
-                    <div class="card-header" onclick="toggleSection('pdfOptionsCard')">
-                       <h2>📄 Enhanced PDF Options</h2>
-                       <span class="toggle-icon">▼</span>
-                    </div>
-                    <div class="card-content">
-                      <div class="form-row">
-                          <div class="form-group">
-                              <label for="pdfLanguage">PDF Language</label>
-                              <select id="pdfLanguage">
-                                  <option value="en">English</option>
-                                  <option value="hi">हिंदी (Hindi)</option>
-                                  <option value="es">Español (Spanish)</option>
-                                  <option value="fr">Français (French)</option>
-                                  <option value="de">Deutsch (German)</option>
-                                  <option value="it">Italiano (Italian)</option>
-                                  <option value="pt">Português (Portuguese)</option>
-                                  <option value="ar">العربية (Arabic)</option>
-                                  <option value="zh">中文 (Chinese)</option>
-                                  <option value="ja">日本語 (Japanese)</option>
-                              </select>
-                          </div>
-                          <div class="form-group">
-                              <label for="pdfTheme">PDF Theme</label>
-                              <select id="pdfTheme">
-                                  <option value="default">Default Theme</option>
-                                  <option value="premium">Premium Theme</option>
-                                  <option value="minimal">Minimal Theme</option>
-                                  <option value="corporate">Corporate Theme</option>
-                              </select>
-                          </div>
-                          <div class="form-group">
-                              <label for="customColors">Custom Brand Colors (Hex)</label>
-                              <input type="text" id="customColors" placeholder="#05C3DE,#4ee0f0" title="Primary,Secondary colors separated by comma">
-                          </div>
-                      </div>
-                    </div>
+                        <div class="card collapsible">
+            <h2>📄 Enhanced PDF Options</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pdfLanguage">PDF Language</label>
+                    <select id="pdfLanguage">
+                        <option value="en">English</option>
+                        <option value="hi">हिंदी (Hindi)</option>
+                        <option value="es">Español (Spanish)</option>
+                        <option value="fr">Français (French)</option>
+                        <option value="de">Deutsch (German)</option>
+                        <option value="it">Italiano (Italian)</option>
+                        <option value="pt">Português (Portuguese)</option>
+                        <option value="ar">العربية (Arabic)</option>
+                        <option value="zh">中文 (Chinese)</option>
+                        <option value="ja">日本語 (Japanese)</option>
+                    </select>
                 </div>
-
-                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px;">
-                    <button class="btn-primary" onclick="downloadPDF('client')" style="flex-grow: 1;">📄 Download Client Quote</button>
-                    <button class="btn-dark" onclick="downloadPDF('business')" style="flex-grow: 1;">📈 Download Business Copy</button>
-                    <button class="btn-secondary" onclick="downloadPDF('premium')" style="flex-grow: 1;">⭐ Premium PDF</button>
-                    <button class="btn-secondary" onclick="shareItinerary()" style="flex-grow: 1;">📤 Share Itinerary</button>
-                    <button class="btn-secondary" onclick="exportToJSON()" style="flex-grow: 1;">💾 Export Data</button>
+                <div class="form-group">
+                    <label for="pdfTheme">PDF Theme</label>
+                    <select id="pdfTheme">
+                        <option value="default">Default Theme</option>
+                        <option value="premium">Premium Theme</option>
+                        <option value="minimal">Minimal Theme</option>
+                        <option value="corporate">Corporate Theme</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="customColors">Custom Brand Colors (Hex)</label>
+                    <input type="text" id="customColors" placeholder="#05C3DE,#4ee0f0" title="Primary,Secondary colors separated by comma">
                 </div>
             </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px;">
+            <button class="btn-primary" onclick="downloadPDF('client')" style="flex-grow: 1;">📄 Download Client Quote</button>
+            <button class="btn-dark" onclick="downloadPDF('business')" style="flex-grow: 1;">📈 Download Business Copy</button>
+            <button class="btn-secondary" onclick="downloadPDF('premium')" style="flex-grow: 1;">⭐ Premium PDF</button>
+            <button class="btn-secondary" onclick="shareItinerary()" style="flex-grow: 1;">📤 Share Itinerary</button>
+            <button class="btn-secondary" onclick="exportToJSON()" style="flex-grow: 1;">💾 Export Data</button>
+        </div>
             </div>
         </div>
     </div>
@@ -3218,7 +3142,6 @@ Generated by Travelverse Itinerary Planner`;
             updateKidsAges();
             renderPlaces();
             updateProgress();
-            loadSectionStates(); // Load saved section states
 
             if (data.clientName) { generateItinerary(); }
         }
@@ -3254,6 +3177,55 @@ Generated by Travelverse Itinerary Planner`;
             exclusions = predefinedExclusions.map(text => ({ text, checked: true, custom: false }));
             renderInclusionsExclusions();
             showNotification('Inclusions and exclusions reset to default values', 'success');
+        }
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('collapsed');
+                const icon = section.querySelector('.toggle-icon');
+                if (icon) {
+                    icon.textContent = section.classList.contains('collapsed') ? '▶' : '▼';
+                }
+            }
+        }
+
+        function makeAllSectionsCollapsible() {
+            const sections = [
+                { id: 'trainDetailsCard', title: '🚆 Train Details' },
+                { id: 'busDetailsCard', title: '🚌 Bus Details' },
+                { id: 'transfersCard', title: '🚗 Airport/Train Station Transfers' },
+                { id: 'hotelCard', title: '🏨 Hotel Accommodations' },
+                { id: 'activitiesCard', title: '🏞️ Activities & Tours' },
+                { id: 'weatherCard', title: '🌤️ Weather & Travel Info' },
+                { id: 'costingCard', title: '💰 Costing & Margin' },
+                { id: 'inclusionsCard', title: '📦 Inclusions & Exclusions' },
+                { id: 'timezoneCard', title: '⏰ Time Zone Calculator' },
+                { id: 'visaCard', title: '🛂 Visa & Travel Requirements' },
+                { id: 'packingCard', title: '🧳 Smart Packing List Generator' },
+                { id: 'templatesCard', title: '📋 Templates & Export' }
+            ];
+
+            sections.forEach(section => {
+                const existingCard = document.querySelector(`h2:contains('${section.title.split(' ').slice(1).join(' ')}')`).closest('.card');
+                if (existingCard && !existingCard.classList.contains('collapsible')) {
+                    existingCard.id = section.id;
+                    existingCard.classList.add('collapsible');
+                    
+                    const h2 = existingCard.querySelector('h2');
+                    const content = existingCard.innerHTML;
+                    
+                    existingCard.innerHTML = `
+                        <div class="card-header" onclick="toggleSection('${section.id}')">
+                            <h2>${section.title}</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="card-content">
+                            ${content.replace(`<h2>${section.title}</h2>`, '')}
+                        </div>
+                    `;
+                }
+            });
         }
 
         // --- NEW MASTER DATE LOGIC ---
@@ -4183,6 +4155,7 @@ Generated by Travelverse Itinerary Planner`;
         }
 
         window.onload = function() {
+            initializeCollapsibleSections();
             initializeTheme();
             initializeAuth();
             loadData();
@@ -4204,29 +4177,48 @@ Generated by Travelverse Itinerary Planner`;
                     saveData();
                 }
             });
+        // Enhanced Collapsible Sections Functionality
+        function initializeCollapsibleSections() {
+            const cards = document.querySelectorAll(".card:not(.collapsible)");
+            cards.forEach((card, index) => {
+                if (!card.id) {
+                    card.id = `section_${index}`;
+                }
+                
+                const h2 = card.querySelector("h2");
+                if (h2 && !card.querySelector(".card-header")) {
+                    const title = h2.textContent;
+                    const content = card.innerHTML;
+                    
+                    card.classList.add("collapsible");
+                    card.innerHTML = `
+                        <div class="card-header" onclick="toggleSection("${card.id}")">
+                            <h2>${title}</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="card-content">
+                            ${content.replace(`<h2>${title}</h2>`, "")}
+                        </div>
+                    `;
+                }
+            });
         }
-        
-        // --- Enhanced Collapsible Sections Functionality ---
+
+        // Enhanced toggle function with smooth animations
         function toggleSection(sectionId) {
             const section = document.getElementById(sectionId);
             if (section) {
-                section.classList.toggle('collapsed');
-                saveSectionStates();
-            }
-        }
-
-        function toggleAllSections(expand = true) {
-            const sections = document.querySelectorAll(".collapsible");
-            sections.forEach(section => {
-                if (expand) {
+                const isCollapsed = section.classList.contains("collapsed");
+                const content = section.querySelector(".card-content");
+                const icon = section.querySelector(".toggle-icon");
+                
+                if (isCollapsed) {
+                    // Expand
                     section.classList.remove("collapsed");
+                    content.style.display = "block";
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    if (icon) icon.textContent = "▼";
                 } else {
-                    section.classList.add("collapsed");
-                }
-            });
-            saveSectionStates();
-        }
-        
         // Save section states to localStorage
         function saveSectionStates() {
             const sections = document.querySelectorAll(".collapsible");
@@ -4244,10 +4236,46 @@ Generated by Travelverse Itinerary Planner`;
                 const section = document.getElementById(sectionId);
                 if (section && states[sectionId]) {
                     section.classList.add("collapsed");
-                } else if (section) {
-                     section.classList.remove("collapsed");
+                    const content = section.querySelector(".card-content");
+                    const icon = section.querySelector(".toggle-icon");
+                    if (content) content.style.display = "none";
+                    if (icon) icon.textContent = "▶";
                 }
             });
+        }
+                    // Collapse
+                    section.classList.add("collapsed");
+                    content.style.maxHeight = "0";
+                    setTimeout(() => {
+                        content.style.display = "none";
+                    }, 300);
+                    if (icon) icon.textContent = "▶";
+                }
+            }
+        }
+
+        // Add collapse all / expand all functionality
+        function toggleAllSections(expand = true) {
+            const sections = document.querySelectorAll(".collapsible");
+            sections.forEach(section => {
+                const content = section.querySelector(".card-content");
+                const icon = section.querySelector(".toggle-icon");
+                
+                if (expand) {
+                    section.classList.remove("collapsed");
+                    content.style.display = "block";
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    if (icon) icon.textContent = "▼";
+                } else {
+                    section.classList.add("collapsed");
+                    content.style.maxHeight = "0";
+                    setTimeout(() => {
+                        content.style.display = "none";
+                    }, 300);
+                    if (icon) icon.textContent = "▶";
+                }
+            });
+        }
         }
     </script>
 </body>

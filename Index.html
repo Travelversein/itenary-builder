@@ -1,0 +1,3086 @@
+<!DOCTYPE html>
+<!-- saved from url=(0059)file:///Users/travelverse.in/travelverse-project/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travelverse Itinerary Planner</title>
+
+    <!-- External libraries for PDF generation - Internet Connection Required -->
+    <script src="./Index_files/jspdf.umd.min.js"></script>
+    <script src="./Index_files/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- External library for Drag-and-Drop - Internet Connection Required -->
+    <script src="./Index_files/Sortable.min.js"></script>
+
+    <style>
+        /* --- Google Font --- */
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        /* --- MODERN UI - APPLE INSPIRED --- */
+        :root {
+            --brand-blue: #05C3DE; /* Updated Brand Color */
+            --brand-blue-light: #4ee0f0; /* Lighter version of new brand color */
+            --bg-color: #f5f5f7;
+            --card-bg-color: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #515154;
+            --border-color: #d2d2d7;
+            --error-color: #bf0a28;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --radius-l: 18px;
+            --radius-m: 12px;
+        }
+
+        /* --- DARK MODE VARIABLES --- */
+        [data-theme="dark"] {
+            --bg-color: #1c1c1e;
+            --card-bg-color: #2c2c2e;
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --border-color: #38383a;
+            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* --- LOADING STATES --- */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--card-bg-color);
+            border-top: 4px solid var(--brand-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-primary);
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        /* --- TOAST NOTIFICATIONS --- */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--card-bg-color);
+            color: var(--text-primary);
+            padding: 15px 20px;
+            border-radius: var(--radius-m);
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--brand-blue);
+            min-width: 300px;
+            transform: translateX(100%);
+            animation: slideIn 0.3s ease forwards;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.success { border-left-color: #34c759; }
+        .toast.error { border-left-color: var(--error-color); }
+        .toast.warning { border-left-color: #ff9500; }
+
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+
+        .toast-icon {
+            font-size: 1.2rem;
+        }
+
+        /* --- THEME TOGGLE --- */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-toggle .icon {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container { max-width: 960px; margin: 40px auto; padding: 20px; }
+
+        header { text-align: center; margin-bottom: 40px; }
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            background: linear-gradient(45deg, #333, var(--brand-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card {
+            background-color: var(--card-bg-color);
+            border-radius: var(--radius-l);
+            box-shadow: var(--shadow);
+            padding: 35px 40px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-m);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background-color: #fafafa;
+        }
+
+        input:disabled {
+            background-color: #f0f0f2;
+            cursor: not-allowed;
+            color: #999;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 4px rgba(5, 195, 222, 0.15); /* Updated focus color */
+            background-color: #fff;
+        }
+
+        button {
+            border: none;
+            border-radius: var(--radius-m);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--brand-blue);
+            color: white;
+            padding: 18px 28px;
+            width: 100%;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(5, 195, 222, 0.2); /* Updated shadow color */
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: var(--brand-blue-light);
+            box-shadow: 0 6px 15px rgba(5, 195, 222, 0.3); /* Updated shadow color */
+        }
+
+        .btn-secondary {
+            background-color: #e8e8ed;
+            color: var(--text-primary);
+            padding: 16px 24px;
+        }
+        .btn-secondary:hover { background-color: #dcdce1; }
+        
+        .btn-dark {
+            background-color: #333;
+            color: white;
+        }
+        .btn-dark:hover {
+            background-color: #555;
+        }
+
+        .btn-remove {
+            background-color: #ffe5e9;
+            color: var(--error-color);
+            padding: 8px 14px;
+            font-size: 0.8rem;
+        }
+        .btn-remove:hover { background-color: var(--error-color); color: white; }
+        
+        .btn-edit {
+            background-color: #e6f7ff;
+            color: #00609a;
+            padding: 8px 14px;
+            font-size: 0.8rem;
+        }
+        .btn-edit:hover { background-color: #ccefff; }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .checkbox-group label {
+            font-weight: 500;
+            color: var(--text-primary);
+            flex-grow: 1;
+        }
+        
+        .custom-add-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            margin: 25px 0;
+        }
+        th, td { padding: 16px; text-align: left; border-bottom: 1px solid #f0f0f2;}
+        thead th {
+            background-color: var(--card-bg-color);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-top: 1px solid #f0f0f2;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        td.actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Style for draggable rows */
+        tbody tr {
+            cursor: grab;
+        }
+        .sortable-ghost {
+            background: #e6f7ff;
+            opacity: 0.7;
+        }
+        .sortable-drag {
+            cursor: grabbing;
+        }
+        
+        #itinerary { animation: fadeIn 0.8s ease-in-out; }
+        .itinerary-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            background-color: var(--bg-color);
+            padding: 25px;
+            border-radius: var(--radius-l);
+            margin-bottom: 30px;
+        }
+        .summary-item { display: flex; align-items: center; gap: 12px; }
+        .summary-item .icon { font-size: 1.5rem; color: var(--brand-blue); }
+        .summary-item div { font-size: 0.9rem; }
+        .summary-item strong { color: var(--text-primary); font-weight: 600; display: block; }
+        .summary-item span { color: var(--text-secondary); }
+
+        .total {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: right;
+            margin-top: 20px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border-color);
+        }
+        .total span { color: var(--text-secondary); font-weight: 500; }
+
+        .hidden { display: none; }
+
+        #error-display {
+            background-color: #fff0f2; color: var(--error-color);
+            padding: 15px; border-radius: var(--radius-m);
+            border-left: 5px solid var(--error-color);
+            margin-bottom: 20px; text-align: center; font-weight: 600;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .day-timeline {
+            position: relative;
+            padding: 20px 0;
+            margin-top: 40px; 
+        }
+        .day-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px; 
+            height: calc(100% - 80px); 
+            width: 2px;
+            background: #e8e8ed;
+        }
+        .day-entry {
+            position: relative;
+            margin-left: 60px;
+            margin-bottom: 30px;
+            background: var(--bg-color);
+            border-radius: var(--radius-l);
+            padding: 20px;
+        }
+        .day-entry:first-child::before {
+            top: 18px; 
+        }
+
+        .day-entry::before {
+            content: attr(data-day);
+            position: absolute;
+            left: -58px; top: 18px;
+            width: 36px; height: 36px;
+            background: var(--brand-blue);
+            color: white;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            border: 4px solid var(--card-bg-color);
+        }
+        .day-entry h4 { margin: 0 0 15px 0; font-weight: 700; }
+        .day-item-list { list-style-type: none; padding-left: 0; }
+        .day-item-list li {
+            display: flex; gap: 15px;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e3;
+        }
+        .day-item-list li:last-child { border-bottom: none; }
+        .day-item-list .icon { font-size: 1.2rem; color: var(--brand-blue); line-height: 1.6; }
+        .day-item-list .item-details { display: flex; flex-direction: column; }
+        .day-item-list .item-title { font-weight: 600; }
+        .day-item-list .item-location { font-size: 0.9rem; color: var(--text-secondary); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- VISUAL CALENDAR VIEW --- */
+        .calendar-view {
+            background: var(--card-bg-color);
+            border-radius: var(--radius-l);
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .calendar-nav button {
+            background: var(--brand-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border-radius: var(--radius-m);
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: var(--card-bg-color);
+            min-height: 80px;
+            padding: 8px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background: var(--bg-color);
+        }
+
+        .calendar-day.today {
+            background: var(--brand-blue);
+            color: white;
+        }
+
+        .calendar-day.has-events {
+            background: rgba(5, 195, 222, 0.1);
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .day-events {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .event-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--brand-blue);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 3px;
+        }
+
+
+
+        /* --- SHARE BUTTONS --- */
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: var(--radius-m);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .share-btn.email {
+            background: #ea4335;
+            color: white;
+        }
+
+        .share-btn.whatsapp {
+            background: #25d366;
+            color: white;
+        }
+
+        .share-btn.google-calendar {
+            background: #4285f4;
+            color: white;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* --- FLIGHT API SUGGESTIONS --- */
+        .suggestion-container {
+            position: relative;
+        }
+
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 var(--radius-m) var(--radius-m);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item .suggestion-text {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .suggestion-item .suggestion-subtext {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Flight Results Modal */
+        .flight-results-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .flight-results-content {
+            background: white;
+            border-radius: var(--radius-l);
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .flight-result-item {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-m);
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .flight-result-item:hover {
+            border-color: var(--brand-blue);
+            box-shadow: 0 2px 8px rgba(5, 195, 222, 0.2);
+        }
+
+        .flight-result-item.selected {
+            border-color: var(--brand-blue);
+            background: rgba(5, 195, 222, 0.1);
+        }
+
+        .flight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .flight-airline {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .flight-price {
+            font-weight: 600;
+            color: var(--brand-blue);
+            font-size: 1.1rem;
+        }
+
+        .flight-details {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .flight-route {
+            text-align: center;
+        }
+
+        .flight-arrow {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .flight-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* --- PROGRESS INDICATOR --- */
+        .progress-container {
+            background: var(--card-bg-color);
+            border-radius: var(--radius-l);
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-percentage {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e8e8ed;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--brand-blue), var(--brand-blue-light));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .progress-step.completed {
+            color: var(--brand-blue);
+        }
+
+        .progress-step.current {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            background: #e8e8ed;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.completed .step-icon {
+            background: var(--brand-blue);
+            color: white;
+        }
+
+        .progress-step.current .step-icon {
+            background: var(--brand-blue-light);
+            color: var(--brand-blue);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <div class="icon">🌙</div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div style="text-align: center;">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Generating itinerary...</div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Flight Results Modal -->
+    <div id="flightResultsModal" class="flight-results-modal">
+        <div class="flight-results-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>✈️ Available Flights</h2>
+                <button onclick="closeFlightResults()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+            </div>
+            <div id="flightResultsList"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-primary" onclick="selectFlight()">Select Flight</button>
+                <button class="btn-secondary" onclick="closeFlightResults()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Travelverse Itinerary Planner</h1>
+        </header>
+
+        <!-- Progress Indicator -->
+        <div class="progress-container">
+            <div class="progress-header">
+                <div class="progress-title">📋 Itinerary Progress</div>
+                <div class="progress-percentage" id="progressPercentage">83%</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 83%;"></div>
+            </div>
+            <div class="progress-steps">
+                <div class="progress-step completed" id="step1">
+                    <div class="step-icon">1</div>
+                    <span>Traveler Details</span>
+                </div>
+                <div class="progress-step completed" id="step2">
+                    <div class="step-icon">2</div>
+                    <span>Flights</span>
+                </div>
+                <div class="progress-step completed" id="step3">
+                    <div class="step-icon">3</div>
+                    <span>Hotels</span>
+                </div>
+                <div class="progress-step completed" id="step4">
+                    <div class="step-icon">4</div>
+                    <span>Activities</span>
+                </div>
+                <div class="progress-step current" id="step5">
+                    <div class="step-icon">5</div>
+                    <span>Transport</span>
+                </div>
+                <div class="progress-step completed" id="step6">
+                    <div class="step-icon">6</div>
+                    <span>Complete</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-display" class="hidden"></div>
+        
+        <!-- FORM SECTIONS -->
+        <div class="card">
+            <h2>👤 Traveler Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="clientName">Full Name</label>
+                    <input type="text" id="clientName" placeholder="e.g., Jane Doe">
+                </div>
+                <div class="form-group">
+                    <label for="clientEmail">Email</label>
+                    <input type="email" id="clientEmail" placeholder="your@email.com">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" max="2025-08-13">
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" min="2025-08-01">
+                </div>
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <input type="text" id="country" placeholder="e.g., Italy">
+                </div>
+            </div>
+            <p><strong>Number of Nights:</strong> <span id="nightsDisplay">12</span></p>
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="place">Places to Travel</label>
+                <div class="place-form" style="display:flex; gap:10px;">
+                    <input type="text" id="place" placeholder="e.g., Rome">
+                    <button id="addPlaceBtn" class="btn-secondary" onclick="addPlace()">Add Place</button>
+                </div>
+                <div id="placesList" style="margin-top:15px;"><span style="display:inline-flex; align-items:center; gap: 8px; background: #eef1f4; padding: 5px 10px; border-radius: 6px; margin-right: 10px; margin-bottom: 10px;">Paris <button class="btn-remove" style="padding: 2px 6px; font-size:12px;" onclick="removePlace(0)">✖</button></span><span style="display:inline-flex; align-items:center; gap: 8px; background: #eef1f4; padding: 5px 10px; border-radius: 6px; margin-right: 10px; margin-bottom: 10px;">Rome <button class="btn-remove" style="padding: 2px 6px; font-size:12px;" onclick="removePlace(1)">✖</button></span><span style="display:inline-flex; align-items:center; gap: 8px; background: #eef1f4; padding: 5px 10px; border-radius: 6px; margin-right: 10px; margin-bottom: 10px;">Barcelona <button class="btn-remove" style="padding: 2px 6px; font-size:12px;" onclick="removePlace(2)">✖</button></span><span style="display:inline-flex; align-items:center; gap: 8px; background: #eef1f4; padding: 5px 10px; border-radius: 6px; margin-right: 10px; margin-bottom: 10px;">Amsterdam <button class="btn-remove" style="padding: 2px 6px; font-size:12px;" onclick="removePlace(3)">✖</button></span></div>
+            </div>
+            <div class="form-row" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label for="adults">Adults</label>
+                    <input type="number" id="adults" placeholder="1" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="kids">Kids</label>
+                    <input type="number" id="kids" placeholder="0" min="0" value="0" oninput="updateKidsAges()">
+                </div>
+            </div>
+            <div id="kidsAgesContainer" class="form-row"><div class="form-group"><label for="kidAge1">Age of Kid 1</label><input type="number" id="kidAge1" placeholder="e.g., 5" min="0" max="17"></div></div>
+        </div>
+
+        <div class="card">
+            <h2>✈️ Flight Details</h2>
+            <div style="margin-bottom: 15px;">
+                <button class="btn-secondary" onclick="searchFlights()" style="margin-right: 10px;">
+                    🔍 Search Real Flights
+                </button>
+                <small style="color: var(--text-secondary);">Powered by Flight API (Demo Mode)</small>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="airline">Airline</label>
+                    <div class="suggestion-container">
+                        <input type="text" id="airline" placeholder="Enter airline name" oninput="searchAirlines(this.value)">
+                        <div id="airlineSuggestions" class="suggestions-dropdown"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="departure">Departure City</label>
+                    <div class="suggestion-container">
+                        <input type="text" id="departure" placeholder="e.g., New York" oninput="searchCities(this.value, &#39;departure&#39;)">
+                        <div id="departureSuggestions" class="suggestions-dropdown"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="arrival">Arrival City</label>
+                    <div class="suggestion-container">
+                        <input type="text" id="arrival" placeholder="e.g., Rome" oninput="searchCities(this.value, &#39;arrival&#39;)">
+                        <div id="arrivalSuggestions" class="suggestions-dropdown"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="flightDate">Flight Date</label>
+                    <input type="date" id="flightDate" min="2025-08-01" max="2025-08-13">
+                </div>
+                <div class="form-group">
+                    <label for="flightCost">Cost (₹)</label>
+                    <input type="number" id="flightCost" placeholder="0.00" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="flightDescription">Description</label>
+                    <input type="text" id="flightDescription" placeholder="e.g., 1 stop, 25 Kgs Baggage">
+                </div>
+            </div>
+            <div id="flightActions" class="action-buttons">
+                <button class="btn-secondary" onclick="addFlight()">+ Add Flight</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🏨 Hotel Accommodations</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hotelName">Hotel Name</label>
+                    <input type="text" id="hotelName" placeholder="e.g., Colosseum Hotel">
+                </div>
+                <div class="form-group">
+                    <label for="hotelLocation">Location</label>
+                    <input type="text" id="hotelLocation" placeholder="e.g., Rome">
+                </div>
+                <div class="form-group">
+                    <label for="roomCategory">Room Category</label>
+                    <input type="text" id="roomCategory" placeholder="e.g., Deluxe Room">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="checkIn">Check-In Date</label>
+                    <input type="date" id="checkIn" min="2025-08-01" max="2025-08-13">
+                </div>
+                <div class="form-group">
+                    <label for="checkOut">Check-Out Date</label>
+                    <input type="date" id="checkOut" disabled="">
+                </div>
+                <div class="form-group">
+                    <label for="hotelCost">Total Cost (₹)</label>
+                    <input type="number" id="hotelCost" placeholder="0.00" min="0">
+                </div>
+            </div>
+            <div id="hotelActions" class="action-buttons">
+                <button class="btn-secondary" onclick="addHotel()">+ Add Hotel</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🏞️ Activities &amp; Tours</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="activityName">Activity Name</label>
+                    <input type="text" id="activityName" placeholder="e.g., Colosseum Tour">
+                </div>
+                <div class="form-group">
+                    <label for="activityLocation">Location</label>
+                    <input type="text" id="activityLocation" placeholder="e.g., Rome">
+                </div>
+                <div class="form-group">
+                    <label for="activityDate">Date</label>
+                    <input type="date" id="activityDate" min="2025-08-01" max="2025-08-13">
+                </div>
+                 <div class="form-group">
+                    <label for="activityCost">Cost (₹)</label>
+                    <input type="number" id="activityCost" placeholder="0.00" min="0">
+                </div>
+            </div>
+             <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="activityDescription">Description</label>
+                    <input type="text" id="activityDescription" placeholder="e.g., Private tour with guide">
+                </div>
+            </div>
+            <div id="activityActions" class="action-buttons">
+                <button class="btn-secondary" onclick="addActivity()">+ Add Activity</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚆 Train Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="trainName">Train Name/Operator</label>
+                    <input type="text" id="trainName" placeholder="e.g., Eurostar">
+                </div>
+                <div class="form-group">
+                    <label for="trainDate">Date</label>
+                    <input type="date" id="trainDate" min="2025-08-01" max="2025-08-13">
+                </div>
+                <div class="form-group">
+                    <label for="trainTime">Time</label>
+                    <input type="time" id="trainTime">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="trainDescription">Description</label>
+                    <input type="text" id="trainDescription" placeholder="e.g., Paris to London, First Class">
+                </div>
+                 <div class="form-group">
+                    <label for="trainCost">Cost (₹)</label>
+                    <input type="number" id="trainCost" placeholder="0.00" min="0">
+                </div>
+            </div>
+            <div id="trainActions" class="action-buttons">
+                <button class="btn-secondary" onclick="addTrain()">+ Add Train</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚌 Bus Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="busName">Bus Name/Operator</label>
+                    <input type="text" id="busName" placeholder="e.g., FlixBus">
+                </div>
+                <div class="form-group">
+                    <label for="busDate">Date</label>
+                    <input type="date" id="busDate" min="2025-08-01" max="2025-08-13">
+                </div>
+                 <div class="form-group">
+                    <label for="busCost">Cost (₹)</label>
+                    <input type="number" id="busCost" placeholder="0.00" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="busDescription">Description</label>
+                    <input type="text" id="busDescription" placeholder="e.g., Rome to Florence, scenic route">
+                </div>
+            </div>
+            <div id="busActions" class="action-buttons">
+                <button class="btn-secondary" onclick="addBus()">+ Add Bus</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🚗 Airport/Train Station Transfers</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="transferName">Transfer Name</label>
+                    <input type="text" id="transferName" placeholder="e.g., Airport Pickup">
+                </div>
+                <div class="form-group">
+                    <label for="transferType">Transfer Type</label>
+                    <select id="transferType">
+                        <option value="Private Car">Private Car</option>
+                        <option value="Shuttle Bus">Shuttle Bus</option>
+                        <option value="Train">Train</option>
+                        <option value="Taxi">Taxi</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transferCost">Cost (₹)</label>
+                    <input type="number" id="transferCost" placeholder="0.00" min="0">
+                </div>
+            </div>
+            <div id="transferActions" class="action-buttons">
+                <button class="btn-secondary" onclick="addTransfer()">+ Add Transfer</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>💰 Costing &amp; Margin</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="marginCost">Margin (₹)</label>
+                    <input type="number" id="marginCost" placeholder="e.g., 10000.00" min="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📦 Inclusions &amp; Exclusions</h2>
+            <div style="margin-bottom: 15px;">
+                <button class="btn-secondary" onclick="resetInclusionsExclusions()" style="margin-right: 10px;">
+                    🔄 Reset to Default
+                </button>
+                <small style="color: var(--text-secondary);">Click to restore predefined inclusions and exclusions</small>
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 40px;">
+                <div>
+                    <h3>Inclusions</h3>
+                    <div id="inclusionsList"><div class="checkbox-group">
+                        <input type="checkbox" id="inclusion-0" onchange="toggleInclusionExclusion(&#39;inclusion&#39;, 0)" checked="">
+                        <label for="inclusion-0">International Flight</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="inclusion-1" onchange="toggleInclusionExclusion(&#39;inclusion&#39;, 1)" checked="">
+                        <label for="inclusion-1">Internal Flight</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="inclusion-2" onchange="toggleInclusionExclusion(&#39;inclusion&#39;, 2)" checked="">
+                        <label for="inclusion-2">Private Airport Transfers</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="inclusion-3" onchange="toggleInclusionExclusion(&#39;inclusion&#39;, 3)" checked="">
+                        <label for="inclusion-3">Accommodation with breakfast</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="inclusion-4" onchange="toggleInclusionExclusion(&#39;inclusion&#39;, 4)" checked="">
+                        <label for="inclusion-4">Mentioned Sightseeings, transfers</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="inclusion-5" onchange="toggleInclusionExclusion(&#39;inclusion&#39;, 5)" checked="">
+                        <label for="inclusion-5">Inter hotel Transfers</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="inclusion-6" onchange="toggleInclusionExclusion(&#39;inclusion&#39;, 6)" checked="">
+                        <label for="inclusion-6">Visa</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="inclusion-7" onchange="toggleInclusionExclusion(&#39;inclusion&#39;, 7)" checked="">
+                        <label for="inclusion-7">GST</label>
+                        
+                    </div></div>
+                    <div class="custom-add-form">
+                        <input type="text" id="customInclusion" placeholder="Add custom inclusion">
+                        <button class="btn-secondary" onclick="addInclusionExclusion(&#39;inclusion&#39;)">Add</button>
+                    </div>
+                </div>
+                <div>
+                    <h3>Exclusions</h3>
+                    <div id="exclusionsList"><div class="checkbox-group">
+                        <input type="checkbox" id="exclusion-0" onchange="toggleInclusionExclusion(&#39;exclusion&#39;, 0)" checked="">
+                        <label for="exclusion-0">TCS</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="exclusion-1" onchange="toggleInclusionExclusion(&#39;exclusion&#39;, 1)" checked="">
+                        <label for="exclusion-1">Flights</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="exclusion-2" onchange="toggleInclusionExclusion(&#39;exclusion&#39;, 2)" checked="">
+                        <label for="exclusion-2">Beverages, Lunch, Dinner throughout the tours</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="exclusion-3" onchange="toggleInclusionExclusion(&#39;exclusion&#39;, 3)" checked="">
+                        <label for="exclusion-3">City tax at the Hotel if applicable</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="exclusion-4" onchange="toggleInclusionExclusion(&#39;exclusion&#39;, 4)" checked="">
+                        <label for="exclusion-4">Any other services not specified above</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="exclusion-5" onchange="toggleInclusionExclusion(&#39;exclusion&#39;, 5)" checked="">
+                        <label for="exclusion-5">Any Personal Expenses</label>
+                        
+                    </div><div class="checkbox-group">
+                        <input type="checkbox" id="exclusion-6" onchange="toggleInclusionExclusion(&#39;exclusion&#39;, 6)" checked="">
+                        <label for="exclusion-6">Early check in/Late check out</label>
+                        
+                    </div></div>
+                    <div class="custom-add-form">
+                        <input type="text" id="customExclusion" placeholder="Add custom exclusion">
+                        <button class="btn-secondary" onclick="addInclusionExclusion(&#39;exclusion&#39;)">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn-primary" onclick="generateItinerary(true)">Generate Travel Plan</button>
+
+
+
+        <!-- VISUAL CALENDAR VIEW -->
+        <div class="card">
+            <h2>🗓️ Visual Calendar View</h2>
+            <div class="calendar-view">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button onclick="previousMonth()">‹</button>
+                        <h3 id="calendarMonth">August 2024</h3>
+                        <button onclick="nextMonth()">›</button>
+                    </div>
+                    <button class="btn-secondary" onclick="toggleCalendarView()">Toggle Calendar</button>
+                </div>
+                <div id="calendarGrid" class="calendar-grid" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- ITINERARY OUTPUT SECTION -->
+        <div id="itinerary" class="">
+            <div class="card">
+                <h2>Trip Summary</h2>
+                <div class="itinerary-summary">
+                    <div class="summary-item"><span class="icon">👤</span><div><strong>Name</strong><span id="itineraryClientName">Abhishek Nandwani</span></div></div>
+                    <div class="summary-item"><span class="icon">📧</span><div><strong>Email</strong><span id="itineraryClientEmail">explore@travelverse.in</span></div></div>
+                    <div class="summary-item"><span class="icon">📅</span><div><strong>Travel Dates</strong><span id="itineraryTravelDates">2025-08-01 to 2025-08-13</span></div></div>
+                    <div class="summary-item"><span class="icon">🌍</span><div><strong>Country</strong><span id="itineraryCountry">Europe</span></div></div>
+                    <div class="summary-item"><span class="icon">📍</span><div><strong>Places</strong><span id="itineraryPlaces">Paris, Rome, Barcelona, Amsterdam</span></div></div>
+                    <div class="summary-item"><span class="icon">🌙</span><div><strong>Nights</strong><span id="itineraryNights">12</span></div></div>
+                    <div class="summary-item"><span class="icon">👥</span><div><strong>Travelers</strong><span id="itineraryTravelers">1 Adults, 1 Kids</span></div></div>
+                </div>
+                
+                <div id="flights_section" style="display: block;">
+                    <h2>Flights</h2>
+                    <table id="flightsTable">
+                        <thead>
+                            <tr><th>Airline</th><th>From</th><th>To</th><th>Date</th><th>Cost</th><th>Action</th></tr>
+                        </thead>
+                        <tbody><tr><td>Air India</td><td>Delhi</td><td>Rome</td><td>2025-08-06</td><td>₹24,897.00</td><td class="actions-cell">
+                        <button class="btn-edit" onclick="editFlight(0)">Edit</button>
+                        <button class="btn-remove" onclick="removeFlight(0)">Remove</button></td></tr></tbody>
+                    </table>
+                </div>
+
+                <div id="trains_section" style="display: none;">
+                    <h2>Trains</h2>
+                    <table id="trainsTable">
+                        <thead>
+                            <tr><th>Operator</th><th>Date</th><th>Time</th><th>Description</th><th>Cost</th><th>Action</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div id="buses_section" style="display: none;">
+                    <h2>Buses</h2>
+                    <table id="busesTable">
+                        <thead>
+                            <tr><th>Operator</th><th>Date</th><th>Description</th><th>Cost</th><th>Action</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                 <div id="transfers_section" style="display: none;">
+                    <h2>Transfers</h2>
+                    <table id="transfersTable">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Cost</th><th>Action</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div id="hotels_section" style="display: block;">
+                    <h2>Hotels</h2>
+                    <table id="hotelsTable">
+                        <thead>
+                            <tr><th>Name</th><th>Location</th><th>Room Category</th><th>Check-In</th><th>Check-Out</th><th>Total Cost</th><th>Action</th></tr>
+                        </thead>
+                        <tbody><tr><td>Hotel de Paris</td><td>Paris</td><td>Deluxe Room</td><td></td><td></td><td>₹15,000.00</td><td class="actions-cell">
+                        <button class="btn-edit" onclick="editHotel(0)">Edit</button>
+                        <button class="btn-remove" onclick="removeHotel(0)">Remove</button></td></tr></tbody>
+                    </table>
+                </div>
+
+                <div id="activities_section" style="display: block;">
+                    <h2>Activities</h2>
+                    <table id="activitiesTable">
+                        <thead>
+                            <tr><th>Activity</th><th>Description</th><th>Date</th><th>Cost</th><th>Action</th></tr>
+                        </thead>
+                        <tbody><tr><td>Eiffel Tower Tour</td><td>Guided tour</td><td></td><td>₹2,000.00</td><td class="actions-cell">
+                        <button class="btn-edit" onclick="editActivity(0)">Edit</button>
+                        <button class="btn-remove" onclick="removeActivity(0)">Remove</button></td></tr></tbody>
+                    </table>
+                </div>
+
+                <div id="daywise_section" style="display: block;">
+                    <h2>Day-wise Itinerary</h2>
+                    <div id="dayWiseItinerary" class="day-timeline"><div class="day-entry" data-day="6"><h4>Wednesday, August 6</h4><ul class="day-item-list"><li><div class="item-details"><span class="item-title">✈️ Flight: Air India to Rome</span><span class="item-location">Direct flight, 25kg baggage</span></div></li></ul></div></div>
+                </div>
+                
+                <div id="inc_exc_section_html" class="">
+                     <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;">
+                        <div>
+                            <h3 style="font-size: 1.3rem;">Inclusions</h3>
+                            <ul id="inclusionsListHtml" style="list-style-position: inside; padding-left: 10px; color: var(--text-secondary);"><li>International Flight</li><li>Internal Flight</li><li>Private Airport Transfers</li><li>Accommodation with breakfast</li><li>Mentioned Sightseeings, transfers</li><li>Inter hotel Transfers</li><li>Visa</li><li>GST</li></ul>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.3rem;">Exclusions</h3>
+                            <ul id="exclusionsListHtml" style="list-style-position: inside; padding-left: 10px; color: var(--text-secondary);"><li>TCS</li><li>Flights</li><li>Beverages, Lunch, Dinner throughout the tours</li><li>City tax at the Hotel if applicable</li><li>Any other services not specified above</li><li>Any Personal Expenses</li><li>Early check in/Late check out</li></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="total">
+                    <span>Total Estimated Cost: </span>₹<span id="totalCost">41,897.00</span>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px;">
+                    <button class="btn-primary" onclick="downloadPDF(&#39;client&#39;)" style="flex-grow: 1;">📄 Download Client Quote</button>
+                    <button class="btn-dark" onclick="downloadPDF(&#39;business&#39;)" style="flex-grow: 1;">📈 Download Business Copy</button>
+                </div>
+
+                <!-- SHARE BUTTONS -->
+                <div class="share-buttons">
+                    <button class="share-btn email" onclick="shareViaEmail()">
+                        📧 Share via Email
+                    </button>
+                    <button class="share-btn whatsapp" onclick="shareViaWhatsApp()">
+                        💬 Share via WhatsApp
+                    </button>
+                    <button class="share-btn google-calendar" onclick="exportToGoogleCalendar()">
+                        📅 Add to Google Calendar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA STATE AND ALL UI LOGIC ---
+        let flights = [], trains = [], buses = [], hotels = [], activities = [], places = [], inclusions = [], exclusions = [], transfers = [];
+        let currentlyEditing = null; // { type: 'flight', index: 0 }
+        const errorDisplay = document.getElementById("error-display");
+        
+        const predefinedInclusions = [ 'International Flight', 'Internal Flight', 'Private Airport Transfers', 'Accommodation with breakfast', 'Mentioned Sightseeings, transfers', 'Inter hotel Transfers', 'Visa', 'GST' ];
+        const predefinedExclusions = [ 'TCS', 'Flights', 'Beverages, Lunch, Dinner throughout the tours', 'City tax at the Hotel if applicable', 'Any other services not specified above', 'Any Personal Expenses', 'Early check in/Late check out' ];
+
+        function displayError(message) { errorDisplay.textContent = message; errorDisplay.classList.remove('hidden'); }
+        function clearError() { if (!errorDisplay.classList.contains('hidden')) { errorDisplay.classList.add('hidden'); } }
+        function calculateNights(start, end) { if (!start || !end) return 0; const startDate = new Date(start); const endDate = new Date(end); return (endDate > startDate) ? Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) : 0; }
+
+        function saveData() {
+            const data = {
+                clientName: document.getElementById("clientName").value, clientEmail: document.getElementById("clientEmail").value,
+                startDate: document.getElementById("startDate").value, endDate: document.getElementById("endDate").value,
+                country: document.getElementById("country").value, adults: document.getElementById("adults").value,
+                kids: document.getElementById("kids").value, places,
+                marginCost: document.getElementById("marginCost").value,
+                flights, trains, buses, transfers, hotels, activities, inclusions, exclusions
+            };
+            localStorage.setItem('travelItineraryData', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('travelItineraryData');
+            const data = savedData ? JSON.parse(savedData) : {};
+            
+            document.getElementById("clientName").value = data.clientName || '';
+            document.getElementById("clientEmail").value = data.clientEmail || '';
+            document.getElementById("startDate").value = data.startDate || '';
+            document.getElementById("endDate").value = data.endDate || '';
+            document.getElementById("country").value = data.country || '';
+            document.getElementById("adults").value = data.adults || '1';
+            document.getElementById("kids").value = data.kids || '0';
+            document.getElementById("marginCost").value = data.marginCost || '';
+            places = data.places || [];
+            flights = data.flights || [];
+            trains = data.trains || [];
+            buses = data.buses || [];
+            transfers = data.transfers || [];
+            hotels = data.hotels || [];
+            activities = data.activities || [];
+            inclusions = data.inclusions || predefinedInclusions.map(text => ({ text, checked: true, custom: false }));
+            exclusions = data.exclusions || predefinedExclusions.map(text => ({ text, checked: true, custom: false }));
+
+            renderInclusionsExclusions();
+            initializeDateLogic(); 
+            updateKidsAges();
+            renderPlaces();
+            initializeProgressTracking();
+            updateProgress();
+
+            if (data.clientName) { generateItinerary(); }
+        }
+        
+        function renderInclusionsExclusions() {
+            const renderList = (type, listContainerId) => {
+                const list = type === 'inclusion' ? inclusions : exclusions;
+                const container = document.getElementById(listContainerId);
+                container.innerHTML = '';
+                
+                // Debug: Log the list to see what's being rendered
+                console.log(`${type} list:`, list);
+                
+                list.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-group';
+                    const checkboxId = `${type}-${index}`;
+                    div.innerHTML = `
+                        <input type="checkbox" id="${checkboxId}" onchange="toggleInclusionExclusion('${type}', ${index})" ${item.checked ? 'checked' : ''}>
+                        <label for="${checkboxId}">${item.text}</label>
+                        ${item.custom ? `<button class="btn-remove" style="padding: 2px 8px; font-size: 12px;" onclick="removeInclusionExclusion('${type}', ${index})">✖</button>` : ''}
+                    `;
+                    container.appendChild(div);
+                });
+            };
+            renderList('inclusion', 'inclusionsList');
+            renderList('exclusion', 'exclusionsList');
+            saveData();
+        }
+
+        function toggleInclusionExclusion(type, index) { const list = type === 'inclusion' ? inclusions : exclusions; list[index].checked = !list[index].checked; saveData(); if(!document.getElementById('itinerary').classList.contains('hidden')) { generateItinerary(); } }
+        function addInclusionExclusion(type) { const inputId = type === 'inclusion' ? 'customInclusion' : 'customExclusion'; const input = document.getElementById(inputId); const text = input.value.trim(); if (text) { const list = type === 'inclusion' ? inclusions : exclusions; list.push({ text, checked: true, custom: true }); input.value = ''; renderInclusionsExclusions(); } }
+        function removeInclusionExclusion(type, index) { const list = type === 'inclusion' ? inclusions : exclusions; list.splice(index, 1); renderInclusionsExclusions(); }
+        
+        // Function to reset inclusions and exclusions to default
+        function resetInclusionsExclusions() {
+            inclusions = predefinedInclusions.map(text => ({ text, checked: true, custom: false }));
+            exclusions = predefinedExclusions.map(text => ({ text, checked: true, custom: false }));
+            renderInclusionsExclusions();
+            showToast('Inclusions and exclusions reset to default', 'success');
+        }
+
+        // --- NEW MASTER DATE LOGIC ---
+        function initializeDateLogic() {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const checkInInput = document.getElementById('checkIn');
+            const checkOutInput = document.getElementById('checkOut');
+
+            const allEventDateInputs = document.querySelectorAll('#flightDate, #trainDate, #busDate, #activityDate, #checkIn');
+
+            if (startDateInput.value) {
+                endDateInput.min = startDateInput.value;
+            }
+            if (endDateInput.value) {
+                startDateInput.max = endDateInput.value;
+            }
+
+            allEventDateInputs.forEach(input => {
+                if (startDateInput.value) input.min = startDateInput.value;
+                else input.removeAttribute('min');
+                
+                if (endDateInput.value) input.max = endDateInput.value;
+                else input.removeAttribute('max');
+            });
+            
+            if (checkInInput.value) {
+                checkOutInput.disabled = false;
+                checkOutInput.min = checkInInput.value;
+                if (endDateInput.value) {
+                    checkOutInput.max = endDateInput.value;
+                } else {
+                    checkOutInput.removeAttribute('max');
+                }
+                if (checkOutInput.value && new Date(checkOutInput.value) < new Date(checkInInput.value)) {
+                    checkOutInput.value = '';
+                }
+            } else {
+                checkOutInput.disabled = true;
+                checkOutInput.value = '';
+            }
+            
+            document.getElementById("nightsDisplay").innerText = calculateNights(startDateInput.value, endDateInput.value);
+            saveData();
+        }
+
+        document.getElementById('startDate').addEventListener('change', initializeDateLogic);
+        document.getElementById('endDate').addEventListener('change', initializeDateLogic);
+        document.getElementById('checkIn').addEventListener('change', initializeDateLogic);
+        // --- END OF NEW DATE LOGIC ---
+
+
+        function updateKidsAges() { const kidsCount = parseInt(document.getElementById("kids").value) || 0; const container = document.getElementById("kidsAgesContainer"); container.innerHTML = ''; for (let i = 1; i <= kidsCount; i++) { const formGroup = document.createElement("div"); formGroup.className = "form-group"; formGroup.innerHTML = `<label for="kidAge${i}">Age of Kid ${i}</label><input type="number" id="kidAge${i}" placeholder="e.g., 5" min="0" max="17">`; container.appendChild(formGroup); } }
+        function addPlace() { clearError(); const placeInput = document.getElementById("place"); const place = placeInput.value.trim(); if (!place) return displayError("Please enter a valid place name."); if (places.includes(place)) return displayError("This place has already been added."); places.push(place); renderPlaces(); placeInput.value = ''; saveData(); }
+        function removePlace(index) { places.splice(index, 1); renderPlaces(); saveData(); if (!document.getElementById("itinerary").classList.contains('hidden')) generateItinerary(); }
+        function renderPlaces() { document.getElementById("placesList").innerHTML = places.map((p, i) => `<span style="display:inline-flex; align-items:center; gap: 8px; background: #eef1f4; padding: 5px 10px; border-radius: 6px; margin-right: 10px; margin-bottom: 10px;">${p} <button class="btn-remove" style="padding: 2px 6px; font-size:12px;" onclick="removePlace(${i})">✖</button></span>`).join(''); }
+        function clearFormFields(fields) { fields.forEach(id => document.getElementById(id).value = ''); }
+        
+        // --- FLIGHT LOGIC ---
+        function resetFlightForm() {
+            currentlyEditing = null;
+            clearFormFields(["airline", "departure", "arrival", "flightDate", "flightCost", "flightDescription"]);
+            document.getElementById('flightActions').innerHTML = `<button class="btn-secondary" onclick="addFlight()">+ Add Flight</button>`;
+        }
+        function addFlight() {
+            const data = { airline: document.getElementById("airline").value.trim(), departure: document.getElementById("departure").value.trim(), arrival: document.getElementById("arrival").value.trim(), flightDate: document.getElementById("flightDate").value, flightCost: parseFloat(document.getElementById("flightCost").value) || 0, flightDescription: document.getElementById("flightDescription").value.trim() };
+            if (!data.airline || !data.departure || !data.arrival || !data.flightDate) { return displayError("Please fill all required flight details."); }
+            flights.push(data);
+            saveData();
+            if(!document.getElementById('itinerary').classList.contains('hidden')) generateItinerary();
+            resetFlightForm();
+        }
+        function editFlight(index) {
+            currentlyEditing = { type: 'flight', index };
+            const flight = flights[index];
+            document.getElementById("airline").value = flight.airline;
+            document.getElementById("departure").value = flight.departure;
+            document.getElementById("arrival").value = flight.arrival;
+            document.getElementById("flightDate").value = flight.flightDate;
+            document.getElementById("flightCost").value = flight.flightCost;
+            document.getElementById("flightDescription").value = flight.flightDescription;
+            document.getElementById('flightActions').innerHTML = `
+                <button class="btn-primary" onclick="updateFlight()">Update Flight</button>
+                <button class="btn-secondary" onclick="resetFlightForm()">Cancel</button>`;
+            document.getElementById('airline').focus();
+        }
+        function updateFlight() {
+            const index = currentlyEditing.index;
+            const data = { airline: document.getElementById("airline").value.trim(), departure: document.getElementById("departure").value.trim(), arrival: document.getElementById("arrival").value.trim(), flightDate: document.getElementById("flightDate").value, flightCost: parseFloat(document.getElementById("flightCost").value) || 0, flightDescription: document.getElementById("flightDescription").value.trim() };
+            if (!data.airline || !data.departure || !data.arrival || !data.flightDate) { return displayError("Please fill all required flight details."); }
+            flights[index] = data;
+            saveData();
+            generateItinerary();
+            resetFlightForm();
+        }
+        function removeFlight(index) { flights.splice(index, 1); saveData(); generateItinerary(); }
+        
+        // --- TRAIN LOGIC ---
+        function resetTrainForm() {
+            currentlyEditing = null;
+            clearFormFields(["trainName", "trainDate", "trainTime", "trainDescription", "trainCost"]);
+            document.getElementById('trainActions').innerHTML = `<button class="btn-secondary" onclick="addTrain()">+ Add Train</button>`;
+        }
+        function addTrain() {
+            const data = { name: document.getElementById("trainName").value.trim(), date: document.getElementById("trainDate").value, time: document.getElementById("trainTime").value, description: document.getElementById("trainDescription").value.trim(), trainCost: parseFloat(document.getElementById("trainCost").value) || 0 };
+            if (!data.name || !data.date) { return displayError("Please fill Train Name and Date."); }
+            trains.push(data);
+            saveData();
+            if(!document.getElementById("itinerary").classList.contains('hidden')) generateItinerary();
+            resetTrainForm();
+        }
+        function editTrain(index) {
+            currentlyEditing = { type: 'train', index };
+            const train = trains[index];
+            document.getElementById("trainName").value = train.name;
+            document.getElementById("trainDate").value = train.date;
+            document.getElementById("trainTime").value = train.time;
+            document.getElementById("trainDescription").value = train.description;
+            document.getElementById("trainCost").value = train.trainCost;
+            document.getElementById('trainActions').innerHTML = `
+                <button class="btn-primary" onclick="updateTrain()">Update Train</button>
+                <button class="btn-secondary" onclick="resetTrainForm()">Cancel</button>`;
+            document.getElementById('trainName').focus();
+        }
+        function updateTrain() {
+            const index = currentlyEditing.index;
+            const data = { name: document.getElementById("trainName").value.trim(), date: document.getElementById("trainDate").value, time: document.getElementById("trainTime").value, description: document.getElementById("trainDescription").value.trim(), trainCost: parseFloat(document.getElementById("trainCost").value) || 0 };
+            if (!data.name || !data.date) { return displayError("Please fill Train Name and Date."); }
+            trains[index] = data;
+            saveData();
+            generateItinerary();
+            resetTrainForm();
+        }
+        function removeTrain(index) { trains.splice(index, 1); saveData(); generateItinerary(); }
+
+        // --- BUS LOGIC ---
+        function resetBusForm() {
+            currentlyEditing = null;
+            clearFormFields(["busName", "busDate", "busDescription", "busCost"]);
+            document.getElementById('busActions').innerHTML = `<button class="btn-secondary" onclick="addBus()">+ Add Bus</button>`;
+        }
+        function addBus() {
+            const data = { name: document.getElementById("busName").value.trim(), date: document.getElementById("busDate").value, description: document.getElementById("busDescription").value.trim(), busCost: parseFloat(document.getElementById("busCost").value) || 0 };
+            if (!data.name || !data.date) { return displayError("Please fill Bus Name and Date."); }
+            buses.push(data);
+            saveData();
+            if(!document.getElementById("itinerary").classList.contains('hidden')) generateItinerary();
+            resetBusForm();
+        }
+        function editBus(index) {
+            currentlyEditing = { type: 'bus', index };
+            const bus = buses[index];
+            document.getElementById("busName").value = bus.name;
+            document.getElementById("busDate").value = bus.date;
+            document.getElementById("busDescription").value = bus.description;
+            document.getElementById("busCost").value = bus.busCost;
+            document.getElementById('busActions').innerHTML = `
+                <button class="btn-primary" onclick="updateBus()">Update Bus</button>
+                <button class="btn-secondary" onclick="resetBusForm()">Cancel</button>`;
+            document.getElementById('busName').focus();
+        }
+        function updateBus() {
+            const index = currentlyEditing.index;
+            const data = { name: document.getElementById("busName").value.trim(), date: document.getElementById("busDate").value, description: document.getElementById("busDescription").value.trim(), busCost: parseFloat(document.getElementById("busCost").value) || 0 };
+            if (!data.name || !data.date) { return displayError("Please fill Bus Name and Date."); }
+            buses[index] = data;
+            saveData();
+            generateItinerary();
+            resetBusForm();
+        }
+        function removeBus(index) { buses.splice(index, 1); saveData(); generateItinerary(); }
+        
+         // --- TRANSFER LOGIC ---
+        function resetTransferForm() {
+            currentlyEditing = null;
+            clearFormFields(["transferName", "transferType", "transferCost"]);
+            document.getElementById('transferActions').innerHTML = `<button class="btn-secondary" onclick="addTransfer()">+ Add Transfer</button>`;
+        }
+        function addTransfer() {
+            const data = { name: document.getElementById("transferName").value.trim(), type: document.getElementById("transferType").value, cost: parseFloat(document.getElementById("transferCost").value) || 0 };
+            if (!data.name || !data.type) { return displayError("Please fill Transfer Name and Type."); }
+            transfers.push(data);
+            saveData();
+            if(!document.getElementById("itinerary").classList.contains('hidden')) generateItinerary();
+            resetTransferForm();
+        }
+        function editTransfer(index) {
+            currentlyEditing = { type: 'transfer', index };
+            const transfer = transfers[index];
+            document.getElementById("transferName").value = transfer.name;
+            document.getElementById("transferType").value = transfer.type;
+            document.getElementById("transferCost").value = transfer.cost;
+            document.getElementById('transferActions').innerHTML = `
+                <button class="btn-primary" onclick="updateTransfer()">Update Transfer</button>
+                <button class="btn-secondary" onclick="resetTransferForm()">Cancel</button>`;
+            document.getElementById('transferName').focus();
+        }
+        function updateTransfer() {
+            const index = currentlyEditing.index;
+            const data = { name: document.getElementById("transferName").value.trim(), type: document.getElementById("transferType").value, cost: parseFloat(document.getElementById("transferCost").value) || 0 };
+            if (!data.name || !data.type) { return displayError("Please fill Transfer Name and Type."); }
+            transfers[index] = data;
+            saveData();
+            generateItinerary();
+            resetTransferForm();
+        }
+        function removeTransfer(index) { transfers.splice(index, 1); saveData(); generateItinerary(); }
+
+
+        // --- HOTEL LOGIC ---
+        function resetHotelForm() {
+            currentlyEditing = null;
+            clearFormFields(["hotelName", "hotelLocation", "roomCategory", "checkIn", "checkOut", "hotelCost"]);
+            initializeDateLogic(); // Reset date states
+            document.getElementById('hotelActions').innerHTML = `<button class="btn-secondary" onclick="addHotel()">+ Add Hotel</button>`;
+        }
+        function addHotel() {
+            const data = { hotelName: document.getElementById("hotelName").value.trim(), hotelLocation: document.getElementById("hotelLocation").value.trim(), roomCategory: document.getElementById("roomCategory").value.trim(), checkIn: document.getElementById("checkIn").value, checkOut: document.getElementById("checkOut").value, hotelCost: parseFloat(document.getElementById("hotelCost").value) || 0 };
+            if (!data.hotelName || !data.hotelLocation || !data.checkIn || !data.checkOut) { return displayError("Please fill all required hotel details."); }
+            if (new Date(data.checkOut) < new Date(data.checkIn)) { return displayError("Check-out date must be on or after the check-in date."); }
+            hotels.push(data);
+            saveData();
+            if(!document.getElementById('itinerary').classList.contains('hidden')) generateItinerary();
+            resetHotelForm();
+        }
+        function editHotel(index) {
+            currentlyEditing = { type: 'hotel', index };
+            const hotel = hotels[index];
+            document.getElementById("hotelName").value = hotel.hotelName;
+            document.getElementById("hotelLocation").value = hotel.hotelLocation;
+            document.getElementById("roomCategory").value = hotel.roomCategory;
+            document.getElementById("checkIn").value = hotel.checkIn;
+            document.getElementById("checkOut").value = hotel.checkOut;
+            document.getElementById("hotelCost").value = hotel.hotelCost;
+            initializeDateLogic(); 
+            document.getElementById('hotelActions').innerHTML = `
+                <button class="btn-primary" onclick="updateHotel()">Update Hotel</button>
+                <button class="btn-secondary" onclick="resetHotelForm()">Cancel</button>`;
+            document.getElementById('hotelName').focus();
+        }
+        function updateHotel() {
+            const index = currentlyEditing.index;
+            const data = { hotelName: document.getElementById("hotelName").value.trim(), hotelLocation: document.getElementById("hotelLocation").value.trim(), roomCategory: document.getElementById("roomCategory").value.trim(), checkIn: document.getElementById("checkIn").value, checkOut: document.getElementById("checkOut").value, hotelCost: parseFloat(document.getElementById("hotelCost").value) || 0 };
+            if (!data.hotelName || !data.hotelLocation || !data.checkIn || !data.checkOut) { return displayError("Please fill all required hotel details."); }
+            if (new Date(data.checkOut) < new Date(data.checkIn)) { return displayError("Check-out date must be on or after the check-in date."); }
+            hotels[index] = data;
+            saveData();
+            generateItinerary();
+            resetHotelForm();
+        }
+        function removeHotel(index) { hotels.splice(index, 1); saveData(); generateItinerary(); }
+        
+        // --- ACTIVITY LOGIC ---
+        function resetActivityForm() {
+            currentlyEditing = null;
+            clearFormFields(["activityName", "activityLocation", "activityDate", "activityCost", "activityDescription"]);
+            document.getElementById('activityActions').innerHTML = `<button class="btn-secondary" onclick="addActivity()">+ Add Activity</button>`;
+        }
+        function addActivity() {
+            const data = { activityName: document.getElementById("activityName").value.trim(), activityLocation: document.getElementById("activityLocation").value.trim(), activityDate: document.getElementById("activityDate").value, activityCost: parseFloat(document.getElementById("activityCost").value) || 0, activityDescription: document.getElementById("activityDescription").value.trim() };
+            if (!data.activityName || !data.activityLocation || !data.activityDate) { return displayError("Please fill at least the Activity Name, Location, and Date."); }
+            activities.push(data);
+            saveData();
+            if(!document.getElementById('itinerary').classList.contains('hidden')) generateItinerary();
+            resetActivityForm();
+        }
+        function editActivity(index) {
+            currentlyEditing = { type: 'activity', index };
+            const activity = activities[index];
+            document.getElementById("activityName").value = activity.activityName;
+            document.getElementById("activityLocation").value = activity.activityLocation;
+            document.getElementById("activityDate").value = activity.activityDate;
+            document.getElementById("activityCost").value = activity.activityCost;
+            document.getElementById("activityDescription").value = activity.activityDescription;
+            document.getElementById('activityActions').innerHTML = `
+                <button class="btn-primary" onclick="updateActivity()">Update Activity</button>
+                <button class="btn-secondary" onclick="resetActivityForm()">Cancel</button>`;
+            document.getElementById('activityName').focus();
+        }
+        function updateActivity() {
+            const index = currentlyEditing.index;
+            const data = { activityName: document.getElementById("activityName").value.trim(), activityLocation: document.getElementById("activityLocation").value.trim(), activityDate: document.getElementById("activityDate").value, activityCost: parseFloat(document.getElementById("activityCost").value) || 0, activityDescription: document.getElementById("activityDescription").value.trim() };
+            if (!data.activityName || !data.activityLocation || !data.activityDate) { return displayError("Please fill at least the Activity Name, Location, and Date."); }
+            activities[index] = data;
+            saveData();
+            generateItinerary();
+            resetActivityForm();
+        }
+        function removeActivity(index) { activities.splice(index, 1); saveData(); generateItinerary(); }
+
+
+        function generateItinerary(shouldScroll = false) {
+            clearError();
+            const clientName = document.getElementById("clientName").value.trim();
+            const startDate = document.getElementById("startDate").value;
+            const endDate = document.getElementById("endDate").value;
+            if (!clientName || !startDate || !endDate) { if(document.getElementById('itinerary').classList.contains('hidden')) {return} else { displayError("Please fill in Traveler Name and Travel Dates.")}; return; }
+            
+            showLoading('Generating itinerary...');
+            
+            setTimeout(() => {
+                document.getElementById("itinerary").classList.remove("hidden");
+            
+            document.getElementById("itineraryClientName").innerText = clientName;
+            document.getElementById("itineraryClientEmail").innerText = document.getElementById("clientEmail").value || 'N/A';
+            document.getElementById("itineraryTravelDates").innerText = `${startDate} to ${endDate}`;
+            document.getElementById("itineraryCountry").innerText = document.getElementById("country").value || 'N/A';
+            document.getElementById("itineraryPlaces").innerText = places.join(", ") || "N/A";
+            document.getElementById("itineraryNights").innerText = calculateNights(startDate, endDate);
+            document.getElementById("itineraryTravelers").innerText = `${document.getElementById("adults").value} Adults, ${document.getElementById("kids").value} Kids`;
+            
+            renderTables();
+            renderAutomatedDayWise(startDate, endDate);
+            
+            const checkedInclusions = inclusions.filter(i => i.checked).map(i => `<li>${i.text}</li>`).join('');
+            const checkedExclusions = exclusions.filter(e => e.checked).map(e => `<li>${e.text}</li>`).join('');
+            document.getElementById("inclusionsListHtml").innerHTML = checkedInclusions;
+            document.getElementById("exclusionsListHtml").innerHTML = checkedExclusions;
+            if(checkedInclusions || checkedExclusions) { document.getElementById("inc_exc_section_html").classList.remove('hidden'); } else { document.getElementById("inc_exc_section_html").classList.add('hidden'); }
+
+            const totalFlightCost = flights.reduce((sum, f) => sum + (f.flightCost || 0), 0);
+            const totalTrainCost = trains.reduce((sum, t) => sum + (t.trainCost || 0), 0);
+            const totalBusCost = buses.reduce((sum, b) => sum + (b.busCost || 0), 0);
+            const totalTransferCost = transfers.reduce((sum, t) => sum + (t.cost || 0), 0);
+            const totalHotelCost = hotels.reduce((sum, h) => sum + (h.hotelCost || 0), 0);
+            const totalActivityCost = activities.reduce((sum, a) => sum + (a.activityCost || 0), 0);
+            const marginCost = parseFloat(document.getElementById("marginCost").value) || 0;
+
+            document.getElementById("totalCost").innerText = (totalFlightCost + totalTrainCost + totalBusCost + totalTransferCost + totalHotelCost + totalActivityCost + marginCost).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            makeTablesSortable();
+
+            if (shouldScroll) {
+                document.getElementById("itinerary").scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            hideLoading();
+            showToast('Itinerary generated successfully!', 'success');
+            updateProgress();
+            }, 1000);
+        }
+
+        function renderTables() {
+            const render = (tableId, sectionId, data, columns, editFn, removeFn) => {
+                const tableBody = document.getElementById(tableId).querySelector("tbody");
+                const section = document.getElementById(sectionId);
+                tableBody.innerHTML = '';
+                if (data.length === 0) { section.style.display = 'none'; return; }
+                section.style.display = 'block';
+                data.forEach((item, index) => {
+                    const row = tableBody.insertRow();
+                    columns.forEach(col => row.insertCell().textContent = col.render(item));
+                    const actionCell = row.insertCell();
+                    actionCell.className = 'actions-cell';
+                    actionCell.innerHTML = `
+                        <button class="btn-edit" onclick="${editFn}(${index})">Edit</button>
+                        <button class="btn-remove" onclick="${removeFn}(${index})">Remove</button>`;
+                });
+            };
+            const formatCurrency = (num) => `₹${(num || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            render('flightsTable', 'flights_section', flights, [{ render: i => i.airline }, { render: i => i.departure }, { render: i => i.arrival }, { render: i => i.flightDate }, { render: i => formatCurrency(i.flightCost) }], 'editFlight', 'removeFlight');
+            render('trainsTable', 'trains_section', trains, [{ render: i => i.name }, { render: i => i.date }, { render: i => i.time || 'N/A' }, { render: i => i.description }, { render: i => formatCurrency(i.trainCost) }], 'editTrain', 'removeTrain');
+            render('busesTable', 'buses_section', buses, [{ render: i => i.name }, { render: i => i.date }, { render: i => i.description }, { render: i => formatCurrency(i.busCost) }], 'editBus', 'removeBus');
+            render('transfersTable', 'transfers_section', transfers, [{ render: i => i.name }, { render: i => i.type }, { render: i => formatCurrency(i.cost) }], 'editTransfer', 'removeTransfer');
+            render('hotelsTable', 'hotels_section', hotels, [{ render: i => i.hotelName }, { render: i => i.hotelLocation }, { render: i => i.roomCategory }, { render: i => i.checkIn }, { render: i => i.checkOut }, { render: i => formatCurrency(i.hotelCost) }], 'editHotel', 'removeHotel');
+            render('activitiesTable', 'activities_section', activities, [{ render: i => i.activityName }, { render: i => i.activityDescription }, { render: i => i.activityDate }, { render: i => formatCurrency(i.activityCost) }], 'editActivity', 'removeActivity');
+        }
+
+        function makeTablesSortable() {
+            const sortableOptions = (dataArray) => ({
+                animation: 150,
+                onEnd: (evt) => {
+                    const [item] = dataArray.splice(evt.oldIndex, 1);
+                    dataArray.splice(evt.newIndex, 0, item);
+                    saveData();
+                    generateItinerary();
+                }
+            });
+            if (typeof Sortable === 'undefined') return;
+            new Sortable(document.getElementById('flightsTable').querySelector('tbody'), sortableOptions(flights));
+            new Sortable(document.getElementById('trainsTable').querySelector('tbody'), sortableOptions(trains));
+            new Sortable(document.getElementById('busesTable').querySelector('tbody'), sortableOptions(buses));
+            new Sortable(document.getElementById('transfersTable').querySelector('tbody'), sortableOptions(transfers));
+            new Sortable(document.getElementById('hotelsTable').querySelector('tbody'), sortableOptions(hotels));
+            new Sortable(document.getElementById('activitiesTable').querySelector('tbody'), sortableOptions(activities));
+        }
+
+
+        function renderAutomatedDayWise(startDateStr, endDateStr) {
+            const container = document.getElementById("dayWiseItinerary");
+            const section = document.getElementById("daywise_section");
+            container.innerHTML = '';
+            const totalNights = calculateNights(startDateStr, endDateStr);
+            if (totalNights < 0) { section.style.display = 'none'; return; }
+            const totalDays = totalNights + 1;
+            let hasContent = false;
+            const startDate = new Date(startDateStr);
+            for (let i = 0; i < totalDays; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setUTCDate(currentDate.getUTCDate() + i);
+                const dateString = currentDate.toISOString().split('T')[0];
+                
+                let eventsHtml = '';
+
+                hotels.filter(h => h.checkOut === dateString).forEach(h => { eventsHtml += `<li><div class="item-details"><span class="item-title">🏨 Check-out: ${h.hotelName}</span><span class="item-location">${h.hotelLocation}</span></div></li>`; });
+                flights.filter(f => f.flightDate === dateString).forEach(f => { eventsHtml += `<li><div class="item-details"><span class="item-title">✈️ Flight: ${f.airline} to ${f.arrival}</span><span class="item-location">${f.flightDescription || 'Details unavailable'}</span></div></li>`; });
+                trains.filter(t => t.date === dateString).forEach(t => { eventsHtml += `<li><div class="item-details"><span class="item-title">🚆 Train: ${t.name}</span><span class="item-location">${t.description || 'Details unavailable'}</span></div></li>`; });
+                buses.filter(b => b.date === dateString).forEach(b => { eventsHtml += `<li><div class="item-details"><span class="item-title">🚌 Bus: ${b.name}</span><span class="item-location">${b.description || 'Details unavailable'}</span></div></li>`; });
+                hotels.filter(h => h.checkIn === dateString).forEach(h => { eventsHtml += `<li><div class="item-details"><span class="item-title">🏨 Check-in: ${h.hotelName}</span><span class="item-location">${h.hotelLocation}</span></div></li>`; });
+                activities.filter(a => a.activityDate === dateString).forEach(a => { eventsHtml += `<li><div class="item-details"><span class="item-title">🏞️ Activity: ${a.activityName}</span><span class="item-location">${a.activityLocation}</span></div></li>`; });
+
+                if (eventsHtml) {
+                    hasContent = true;
+                    const dayHeader = `<h4>${currentDate.toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', month: 'long', day: 'numeric' })}</h4>`;
+                    container.innerHTML += `<div class="day-entry" data-day="${i + 1}">${dayHeader}<ul class="day-item-list">${eventsHtml}</ul></div>`;
+                }
+            }
+            section.style.display = hasContent ? 'block' : 'none';
+        }
+
+        function formatDateToDDMMYYYY(dateStr) {
+            if (!dateStr || !dateStr.includes('-')) return dateStr;
+            const [year, month, day] = dateStr.split('-');
+            return `${day}-${month}-${year}`;
+        }
+        
+        function downloadPDF(pdfType) {
+            clearError();
+            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                alert("PDF libraries not loaded. Please check your internet connection.");
+                return;
+            }
+            if (!document.getElementById('clientName').value) {
+                displayError("Cannot generate a PDF without a client name.");
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+                
+                const brandColor = '#05C3DE';
+                const textColor = '#1d1d1f';
+                const lightTextColor = '#515154';
+                const borderColor = '#dee2e6';
+                const backgroundColor = '#f5f5f7';
+                const pageHeight = doc.internal.pageSize.height;
+                const pageWidth = doc.internal.pageSize.width;
+                const margin = 40;
+                const usableWidth = pageWidth - (margin * 2);
+
+                const sanitizeText = (text) => {
+                    if (typeof text !== 'string' || !text) return '';
+                    return text
+                        .replace(/[`''""]/g, "")      
+                        .replace(/\s\s+/g, ' ')         
+                        .replace(/[^\x20-\x7E]/g, '')   
+                        .trim();
+                };
+                
+                const formatCurrencyForPDF = (num) => `INR ${ (num || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                doc.setFont('Helvetica');
+                let yPos = 0;
+
+                // --- Header ---
+                doc.setFillColor(brandColor);
+                doc.rect(0, 0, pageWidth, 112, 'F');
+                doc.setFontSize(22).setFont('Helvetica', 'bold').setTextColor('#FFFFFF').text('Travelverse.in', margin, 40);
+                doc.setFontSize(8).setFont('Helvetica', 'normal').setTextColor('#FFFFFF');
+                doc.text('We Work, DLF Forum, CyberCity, Phase 3, Gurugram, Haryana 122002', margin, 58);
+                doc.text('Email : explore@travelverse.in', margin, 70);
+                doc.text('Phone : +919996968070', margin, 82);
+                doc.text('Awarded for excellence by Govt. of India (Ministry of Statistical Organisation by Shree PR Meshram)', margin, 94);
+                doc.setFontSize(10).setTextColor('#FFFFFF').text('www.travelverse.in', pageWidth - margin, 40, { align: 'right' });
+
+                yPos = 140;
+                
+                const addSectionHeader = (title, underline = true) => {
+                    checkPageBreak(60);
+                    yPos += 35; 
+                    doc.setFontSize(14).setFont('Helvetica', 'bold').setTextColor(textColor).text(title, margin, yPos);
+                    if (underline) {
+                        const textWidth = doc.getTextWidth(title);
+                        doc.setDrawColor(borderColor); 
+                        doc.setLineWidth(1.5);
+                        doc.line(margin, yPos + 4, margin + textWidth, yPos + 4);
+                    }
+                    yPos += 25; 
+                };
+
+                const addBulletedList = (items) => {
+                    doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor);
+                    items.forEach(item => {
+                        const itemLines = doc.splitTextToSize(`•  ${sanitizeText(item)}`, usableWidth - 10);
+                        checkPageBreak((itemLines.length * 11) + 3);
+                        doc.text(itemLines, margin + 10, yPos);
+                        yPos += (itemLines.length * 11) + 3;
+                    });
+                };
+                
+                const checkPageBreak = (requiredHeight) => {
+                    if (yPos + requiredHeight > pageHeight - margin) {
+                        doc.addPage();
+                        yPos = margin;
+                        return true;
+                    }
+                    return false;
+                };
+                
+                function drawBarcode(doc, x, y, width, height) {
+                    const numBars = Math.floor(width / 1.5);
+                    let currentX = x;
+                    doc.setFillColor(textColor);
+                    for (let i = 0; i < numBars; i++) {
+                        const barWidth = Math.random() * 1.2 + 0.4;
+                        if (currentX + barWidth > x + width) break;
+                        doc.rect(currentX, y, barWidth, height, 'F');
+                        currentX += barWidth + (Math.random() * 0.8 + 0.4);
+                    }
+                }
+
+                function drawPlaneIcon(doc, x, y, size, color) {
+                    doc.setDrawColor(color);
+                    doc.setLineWidth(1.5);
+                    doc.line(x, y, x + size, y);
+                    doc.line(x + size * 0.4, y, x + size * 0.6, y - size * 0.4);
+                    doc.line(x + size * 0.4, y, x + size * 0.6, y + size * 0.4);
+                    doc.line(x + size * 0.8, y, x + size * 0.9, y - size * 0.25);
+                }
+
+                const clientName = sanitizeText(document.getElementById('clientName').value);
+                const countryName = sanitizeText(document.getElementById('country').value) || 'Your Destination';
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const nights = calculateNights(startDate, endDate);
+                const travelers = `${document.getElementById("adults").value} Adults, ${document.getElementById("kids").value} Kids`;
+                const placesJoined = sanitizeText(places.join(", ")) || 'N/A';
+
+                const cardX = margin;
+                const cardY = yPos;
+                const cardWidth = usableWidth;
+                const cardHeight = 175;
+                const cornerRadius = 20;
+                const stubWidth = 160;
+                const mainWidth = cardWidth - stubWidth;
+                const separatorX = cardX + mainWidth;
+
+                doc.setDrawColor(borderColor);
+                doc.setFillColor('#FFFFFF');
+                doc.roundedRect(cardX, cardY, cardWidth, cardHeight, cornerRadius, cornerRadius, 'FD');
+
+                let contentX = cardX + 25;
+                let contentY = cardY + 30;
+                const col2X = contentX + 180; 
+
+                doc.setFontSize(10).setFont('Helvetica', 'bold').setTextColor(brandColor).text("YOUR TRIP OVERVIEW", contentX, contentY);
+                doc.setFontSize(22).setFont('Helvetica', 'bold').setTextColor(textColor).text(countryName, contentX, contentY + 25);
+                doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor).text("CLIENT", contentX, contentY + 55);
+                doc.setFontSize(12).setFont('Helvetica', 'bold').setTextColor(textColor).text(clientName, contentX, contentY + 70);
+                doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor).text("DATES", col2X, contentY + 55);
+                doc.setFontSize(12).setFont('Helvetica', 'bold').setTextColor(textColor).text(`${formatDateToDDMMYYYY(startDate)} to ${formatDateToDDMMYYYY(endDate)}`, col2X, contentY + 70);
+                doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor).text("PLACES TO VISIT", contentX, contentY + 95);
+                doc.setFontSize(10).setFont('Helvetica', 'bold').setTextColor(textColor);
+                const placesLines = doc.splitTextToSize(placesJoined, col2X - contentX - 15);
+                doc.text(placesLines, contentX, contentY + 108);
+                doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor).text("TRAVELERS", col2X, contentY + 95);
+                doc.setFontSize(12).setFont('Helvetica', 'bold').setTextColor(textColor).text(travelers, col2X, contentY + 108);
+                doc.setLineDashPattern([2, 2], 0);
+                doc.setDrawColor(borderColor).line(separatorX, cardY + 15, separatorX, cardY + cardHeight - 15);
+                doc.setLineDashPattern([], 0);
+                
+                const stubCenterX = separatorX + stubWidth / 2;
+                drawPlaneIcon(doc, stubCenterX - 15, cardY + 25, 30, brandColor);
+                doc.setFontSize(10).setFont('Helvetica', 'bold').setTextColor(textColor).text("TRIP QUOTE", stubCenterX, cardY + 55, { align: 'center' });
+                doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor).text("Prepared for:", stubCenterX, cardY + 75, { align: 'center' });
+                doc.setFontSize(11).setFont('Helvetica', 'bold').setTextColor(textColor).text(clientName, stubCenterX, cardY + 90, { align: 'center' });
+                const barcodeY = cardY + 110;
+                const barcodeWidth = stubWidth - 30;
+                const barcodeHeight = 35;
+                drawBarcode(doc, stubCenterX - (barcodeWidth / 2), barcodeY, barcodeWidth, barcodeHeight);
+                doc.setFont('Helvetica', 'normal').setFontSize(7).setTextColor(lightTextColor).text("0123456789-TRVL-9876543210", stubCenterX, barcodeY + barcodeHeight + 7, { align: 'center'});
+                yPos = cardY + cardHeight;
+                
+                const tableConfig = {
+                    theme: 'plain',
+                    styles: {
+                        font: 'Helvetica',
+                        fontSize: 9,
+                        cellPadding: 8,
+                        textColor: textColor,
+                        valign: 'middle',
+                    },
+                    headStyles: {
+                        fillColor: brandColor,
+                        textColor: '#ffffff',
+                        fontStyle: 'bold',
+                        fontSize: 10,
+                    },
+                    alternateRowStyles: {
+                        fillColor: backgroundColor
+                    },
+                    startY: yPos,
+                    didDrawPage: (data) => {
+                        yPos = data.cursor.y;
+                    },
+                    didDrawTable: (data) => {
+                        const { table } = data;
+                        const { x, y, width, height } = table;
+                        const headerHeight = table.head[0].height;
+                        const cornerRadius = 6;
+
+                        // Draw the rounded border around the entire table
+                        doc.setLineWidth(1);
+                        doc.setDrawColor(borderColor);
+                        doc.roundedRect(x, y, width, height, cornerRadius, cornerRadius, 'S');
+                        
+                        // Clip the top part of the rectangle to create rounded top corners for the header
+                        doc.save();
+                        doc.beginPath();
+                        doc.moveTo(x + cornerRadius, y);
+                        doc.lineTo(x + width - cornerRadius, y);
+                        doc.quadraticCurveTo(x + width, y, x + width, y + cornerRadius);
+                        doc.lineTo(x + width, y + headerHeight);
+                        doc.lineTo(x, y + headerHeight);
+                        doc.lineTo(x, y + cornerRadius);
+                        doc.quadraticCurveTo(x, y, x + cornerRadius, y);
+                        doc.closePath();
+                        doc.clip();
+                        
+                        doc.setFillColor(brandColor);
+                        doc.rect(x, y, width, headerHeight, 'F');
+                        
+                        doc.restore();
+
+                        doc.setTextColor('#ffffff');
+                        doc.setFont('Helvetica', 'bold');
+                        doc.setFontSize(10);
+                        table.head[0].cells.forEach(cell => {
+                            const textY = cell.y + cell.height / 2;
+                            doc.text(
+                                cell.text,
+                                cell.x + cell.padding('left'),
+                                textY,
+                                {
+                                    baseline: 'middle',
+                                    align: cell.styles.halign
+                                }
+                            );
+                        });
+                    }
+                };
+                const isClientPDF = (pdfType === 'client');
+
+                if (flights.length > 0) {
+                    addSectionHeader('Flights'); tableConfig.startY = yPos;
+                    doc.autoTable({ ...tableConfig, head: isClientPDF ? [['Airline', 'Route', 'Date', 'Description']] : [['Airline', 'Route', 'Date', 'Description', 'Cost']], body: flights.map(f => { const row = [sanitizeText(f.airline), `${sanitizeText(f.departure)} to ${sanitizeText(f.arrival)}`, formatDateToDDMMYYYY(f.flightDate), sanitizeText(f.flightDescription)]; if (!isClientPDF) row.push(formatCurrencyForPDF(f.flightCost)); return row; }), columnStyles: { 0: { cellWidth: 100 }, 1: { cellWidth: 100 }, 2: { cellWidth: 70 }, 3: { overflow: 'linebreak' }, 4: !isClientPDF ? {halign: 'right'} : {} } }); yPos = doc.autoTable.previous.finalY;
+                }
+                 if (trains.length > 0) {
+                    addSectionHeader('Train Details'); tableConfig.startY = yPos;
+                    doc.autoTable({ ...tableConfig, head: isClientPDF ? [['Operator', 'Date', 'Time', 'Description']] : [['Operator', 'Date', 'Time', 'Description', 'Cost']], body: trains.map(t => { const row = [sanitizeText(t.name), formatDateToDDMMYYYY(t.date), t.time || '', sanitizeText(t.description)]; if (!isClientPDF) row.push(formatCurrencyForPDF(t.trainCost)); return row; }), columnStyles: { 1: { cellWidth: 70 }, 3: { overflow: 'linebreak' }, 4: !isClientPDF ? { halign: 'right' } : {} } }); yPos = doc.autoTable.previous.finalY;
+                }
+                if (buses.length > 0) {
+                    addSectionHeader('Bus Details'); tableConfig.startY = yPos;
+                    doc.autoTable({ ...tableConfig, head: isClientPDF ? [['Operator', 'Date', 'Description']] : [['Operator', 'Date', 'Description', 'Cost']], body: buses.map(b => { const row = [sanitizeText(b.name), formatDateToDDMMYYYY(b.date), sanitizeText(b.description)]; if (!isClientPDF) row.push(formatCurrencyForPDF(b.busCost)); return row; }), columnStyles: { 1: { cellWidth: 70 }, 2: { overflow: 'linebreak' }, 3: !isClientPDF ? { halign: 'right' } : {} } }); yPos = doc.autoTable.previous.finalY;
+                }
+                if (transfers.length > 0) {
+                    addSectionHeader('Transfers'); tableConfig.startY = yPos;
+                    doc.autoTable({ ...tableConfig, head: isClientPDF ? [['Name', 'Type']] : [['Name', 'Type', 'Cost']], body: transfers.map(t => { const row = [sanitizeText(t.name), sanitizeText(t.type)]; if (!isClientPDF) row.push(formatCurrencyForPDF(t.cost)); return row; }), columnStyles: { 2: !isClientPDF ? { halign: 'right' } : {} } }); yPos = doc.autoTable.previous.finalY;
+                }
+                if (hotels.length > 0) {
+                    addSectionHeader('Accommodations'); tableConfig.startY = yPos;
+                    const hotelColumnStyles = isClientPDF 
+                        ? { 3: { cellWidth: 75 }, 4: { cellWidth: 75 }, 5: { cellWidth: 50, halign: 'center' } } 
+                        : { 3: { cellWidth: 65 }, 4: { cellWidth: 65 }, 5: { cellWidth: 50, halign: 'center' }, 6: { halign: 'right' } };
+                    
+                    doc.autoTable({ ...tableConfig, head: isClientPDF ? [['Hotel', 'Location', 'Room Category', 'Check-in', 'Check-out', 'Nights']] : [['Hotel', 'Location', 'Room Category', 'Check-in', 'Check-out', 'Nights', 'Total Cost']], 
+                    body: hotels.map(h => { const hotelNights = calculateNights(h.checkIn, h.checkOut); const row = [sanitizeText(h.hotelName), sanitizeText(h.hotelLocation), sanitizeText(h.roomCategory), formatDateToDDMMYYYY(h.checkIn), formatDateToDDMMYYYY(h.checkOut), hotelNights]; if (!isClientPDF) row.push(formatCurrencyForPDF(h.hotelCost)); return row; }), 
+                    columnStyles: hotelColumnStyles
+                    }); 
+                    yPos = doc.autoTable.previous.finalY;
+                }
+                if (activities.length > 0) {
+                    addSectionHeader('Sightseeings'); tableConfig.startY = yPos;
+                    doc.autoTable({ ...tableConfig, head: isClientPDF ? [['Activity', 'Location', 'Date', 'Description']] : [['Activity', 'Location', 'Date', 'Description', 'Cost']], body: activities.map(a => { const row = [sanitizeText(a.activityName), sanitizeText(a.activityLocation), formatDateToDDMMYYYY(a.activityDate), sanitizeText(a.activityDescription) || '']; if (!isClientPDF) row.push(formatCurrencyForPDF(a.activityCost)); return row; }), 
+                    columnStyles: { 
+                        0: { cellWidth: 200, overflow: 'linebreak' }, 
+                        1: { cellWidth: 80 }, 
+                        2: { cellWidth: 70 }, 
+                        3: { overflow: 'linebreak' }, 
+                        4: !isClientPDF ? { halign: 'right' } : {} 
+                    } 
+                }); yPos = doc.autoTable.previous.finalY;
+                }
+                
+                const dayWiseData = [];
+                if (nights >= 0 && startDate) { 
+                    const start = new Date(startDate);
+                    for (let i = 0; i <= nights; i++) {
+                        const d = new Date(start); d.setUTCDate(d.getUTCDate() + i); const dateStr = d.toISOString().split('T')[0];
+                        let events = [];
+                        hotels.filter(h => h.checkOut === dateStr).forEach(h => events.push(`Check-out: ${sanitizeText(h.hotelName)}, ${sanitizeText(h.hotelLocation)}`));
+                        flights.filter(f => f.flightDate === dateStr).forEach(f => events.push(`Flight: ${sanitizeText(f.airline)} (${sanitizeText(f.departure)} to ${sanitizeText(f.arrival)})`));
+                        trains.filter(t => t.date === dateStr).forEach(t => events.push(`Train: ${sanitizeText(t.name)} - ${sanitizeText(t.description)}`));
+                        buses.filter(b => b.date === dateStr).forEach(b => events.push(`Bus: ${sanitizeText(b.name)} - ${sanitizeText(b.description)}`));
+                        hotels.filter(h => h.checkIn === dateStr).forEach(h => events.push(`Check-in: ${sanitizeText(h.hotelName)}, ${sanitizeText(h.hotelLocation)}`));
+                        activities.filter(a => a.activityDate === dateStr).forEach(a => events.push(`Activity: ${sanitizeText(a.activityName)} (${sanitizeText(a.activityLocation)})`));
+                        
+                        if (events.length > 0) {
+                            dayWiseData.push({
+                                day: i + 1,
+                                date: d.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }),
+                                events: events
+                            });
+                        }
+                    }
+                }
+                
+                if (dayWiseData.length > 0) {
+                    addSectionHeader('Day-wise Itinerary');
+                    yPos += 15;
+
+                    const timelineX = margin + 10;
+                    const contentX = timelineX + 25;
+                    const contentWidth = usableWidth - (contentX - margin);
+                    
+                    const dayElementPositions = [];
+
+                    dayWiseData.forEach(dayData => {
+                        let requiredHeight = 0;
+                        const headerHeight = 25;
+                        let eventsHeight = 0;
+                        dayData.events.forEach(event => {
+                            const lines = doc.splitTextToSize(`• ${event}`, contentWidth - 5);
+                            eventsHeight += (lines.length * 10) + 8;
+                        });
+                        requiredHeight = headerHeight + eventsHeight + 20;
+
+                        checkPageBreak(requiredHeight);
+                        dayElementPositions.push({ y: yPos, page: doc.internal.getCurrentPageInfo().pageNumber, data: dayData });
+                        
+                        let currentContentY = yPos;
+                        doc.setFontSize(11).setFont('Helvetica', 'bold').setTextColor(textColor).text(`Day ${dayData.day}: ${dayData.date}`, contentX, currentContentY);
+                        currentContentY += 20;
+
+                        doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor);
+                        dayData.events.forEach(event => {
+                            const eventLines = doc.splitTextToSize(`• ${event}`, contentWidth - 5);
+                            doc.text(eventLines, contentX, currentContentY);
+                            currentContentY += (eventLines.length * 10) + 8;
+                        });
+                        yPos = currentContentY + 15;
+                    });
+                    
+                    const totalPages = doc.internal.getNumberOfPages();
+                    for(let page = 1; page <= totalPages; page++) {
+                        doc.setPage(page);
+                        const elementsOnPage = dayElementPositions.filter(p => p.page === page);
+                        if(elementsOnPage.length > 0) {
+                            const firstElementY = elementsOnPage[0].y;
+                            const lastElementY = elementsOnPage[elementsOnPage.length - 1].y;
+                            doc.setDrawColor(borderColor).setLineWidth(1.5).line(timelineX, firstElementY, timelineX, lastElementY);
+
+                            elementsOnPage.forEach(pos => {
+                                doc.setFillColor('#FFFFFF').circle(timelineX, pos.y, 11, 'F');
+                                doc.setFillColor(brandColor).circle(timelineX, pos.y, 10, 'F');
+                                doc.setFontSize(9).setFont('Helvetica', 'bold').setTextColor('#FFFFFF').text(String(pos.data.day), timelineX, pos.y + 3, { align: 'center' });
+                            });
+                        }
+                    }
+                    doc.setPage(totalPages);
+                }
+                
+                const addIncExcList = (title, items) => { const checkedItems = items.filter(item => item.checked).map(item => sanitizeText(item.text)); if (checkedItems.length === 0) return; addSectionHeader(title); addBulletedList(checkedItems); };
+                addIncExcList('Inclusions', inclusions); addIncExcList('Exclusions', exclusions);
+                
+                const totalFlightCost = flights.reduce((s, f) => s + (f.flightCost || 0), 0);
+                const totalTrainCost = trains.reduce((s, t) => s + (t.trainCost || 0), 0);
+                const totalBusCost = buses.reduce((s, b) => s + (b.busCost || 0), 0);
+                const totalTransferCost = transfers.reduce((s, t) => s + (t.cost || 0), 0);
+                const totalHotelCost = hotels.reduce((s, h) => s + (h.hotelCost || 0), 0);
+                const totalActivityCost = activities.reduce((s, a) => s + (a.activityCost || 0), 0);
+                const marginCost = parseFloat(document.getElementById("marginCost").value) || 0;
+                const totalCost = totalFlightCost + totalTrainCost + totalBusCost + totalTransferCost + totalHotelCost + totalActivityCost + marginCost;
+
+                checkPageBreak(isClientPDF ? 80 : 120);
+                yPos += 30; doc.setDrawColor(borderColor).line(margin, yPos, pageWidth - margin, yPos); yPos += 10;
+                
+                if (!isClientPDF) {
+                    const subtotal = totalCost - marginCost;
+                    doc.setFontSize(12).setFont('Helvetica', 'normal').setTextColor(lightTextColor);
+                    doc.text('Subtotal', margin, yPos + 15);
+                    doc.text(formatCurrencyForPDF(subtotal), pageWidth - margin, yPos + 15, { align: 'right' });
+                    yPos += 20;
+
+                    doc.text('Margin', margin, yPos + 15);
+                    doc.text(formatCurrencyForPDF(marginCost), pageWidth - margin, yPos + 15, { align: 'right' });
+                    yPos += 20;
+                }
+
+                doc.setFontSize(16).setFont('Helvetica', 'bold').setTextColor(textColor);
+                doc.text('Total Estimated Cost', margin, yPos + 15);
+                doc.text(formatCurrencyForPDF(totalCost), pageWidth - margin, yPos + 15, { align: 'right' });
+                yPos += 25; doc.line(margin, yPos, pageWidth - margin, yPos); yPos += 10;
+
+                const aboutText = "At Travelverse, we believe travel should be extraordinary. Born from a passion for exploring, we specialize in crafting unique, tailor-made journeys that match your personal style. We handle all the details, from handpicking the best local partners to providing seamless support, so you can focus on creating unforgettable memories. With Travelverse, you get more than a trip; you get a perfectly organized, stress-free adventure designed just for you.";
+                addSectionHeader('About Travelverse.in');
+                const aboutLines = doc.splitTextToSize(aboutText, usableWidth);
+                checkPageBreak(aboutLines.length * 12);
+                doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor);
+                doc.text(aboutText, margin, yPos, { maxWidth: usableWidth, align: 'justify' });
+                yPos += (aboutLines.length * 11) + 10;
+
+                addSectionHeader('Terms & Conditions');
+                const terms = [
+                    "This document is a quotation; no bookings have been made. All services are subject to availability at the time of booking.",
+                    "To confirm the booking, a deposit of 50% of the total tour price is required.",
+                    "All prices are quoted in INR and are subject to change without notice due to currency fluctuations, new government taxes, or other factors beyond our control.",
+                    "We act as agents for hotels, airlines, and transport operators, and are not liable for any loss, injury, or damage sustained by the traveler directly or indirectly.",
+                    "Please ensure you possess a valid passport and any required visas for the duration of your trip. Visa assistance is an optional service."
+                ];
+                addBulletedList(terms);
+                
+                addSectionHeader('Download Our On-Trip App');
+                const appText = "For live updates, offline access to your documents, and direct communication with our team during your trip, download our dedicated mobile app.";
+                const appTextLines = doc.splitTextToSize(appText, usableWidth);
+                checkPageBreak((appTextLines.length * 12) + 80);
+                doc.setFontSize(9).setFont('Helvetica', 'normal').setTextColor(lightTextColor);
+                doc.text(appText, margin, yPos, { maxWidth: usableWidth, align: 'justify' });
+                yPos += (appTextLines.length * 11) + 25;
+
+                const appStoreLink = "https://apps.apple.com/cn/app/travelverse-in/id6739727152";
+                const playStoreLink = "https://play.google.com/store/apps/details?id=com.travelverse.travelverse_mobile_app&hl=en_IN";
+                
+                const buttonWidth = (usableWidth / 2) - 10;
+                const buttonHeight = 40;
+                const buttonRadius = 12;
+                const buttonY = yPos;
+
+                const appleButtonX = margin;
+                doc.setDrawColor(borderColor);
+                doc.setFillColor('#f0f0f2');
+                doc.roundedRect(appleButtonX, buttonY, buttonWidth, buttonHeight, buttonRadius, buttonRadius, 'FD');
+                doc.link(appleButtonX, buttonY, buttonWidth, buttonHeight, { url: appStoreLink });
+                const appleIconX = appleButtonX + 22;
+                const appleIconY = buttonY + (buttonHeight / 2);
+                doc.setDrawColor(textColor);
+                doc.setLineWidth(2.5);
+                doc.line(appleIconX - 6, appleIconY + 8, appleIconX, appleIconY - 8);
+                doc.line(appleIconX, appleIconY - 8, appleIconX + 6, appleIconY + 8);
+                doc.setLineWidth(2);
+                doc.line(appleIconX - 3.5, appleIconY + 1, appleIconX + 3.5, appleIconY + 1);
+                const appleTextX = appleButtonX + 45;
+                doc.setFont('Helvetica', 'normal');
+                doc.setFontSize(9).setTextColor(lightTextColor).text('Download on the', appleTextX, buttonY + 18);
+                doc.setFont('Helvetica', 'bold');
+                doc.setFontSize(12).setTextColor(textColor).text('App Store', appleTextX, buttonY + 32);
+
+                const googleButtonX = margin + buttonWidth + 20;
+                doc.setDrawColor(borderColor);
+                doc.setFillColor('#f0f0f2');
+                doc.roundedRect(googleButtonX, buttonY, buttonWidth, buttonHeight, buttonRadius, buttonRadius, 'FD');
+                doc.link(googleButtonX, buttonY, buttonWidth, buttonHeight, { url: playStoreLink });
+                const playIconX = googleButtonX + 22;
+                const playIconY = buttonY + (buttonHeight / 2);
+                doc.setFillColor(textColor);
+                doc.triangle(playIconX - 5, playIconY - 7, playIconX - 5, playIconY + 7, playIconX + 5, playIconY, 'F');
+                const googleTextX = googleButtonX + 45;
+                doc.setFont('Helvetica', 'normal');
+                doc.setFontSize(9).setTextColor(lightTextColor).text('GET IT ON', googleTextX, buttonY + 18);
+                doc.setFont('Helvetica', 'bold');
+                doc.setFontSize(12).setTextColor(textColor).text('Google Play', googleTextX, buttonY + 32);
+                
+                yPos = buttonY + buttonHeight + 10;
+                
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8).setFont('Helvetica', 'normal').setTextColor(lightTextColor);
+                    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 20, { align: 'right' });
+                }
+
+                doc.setPage(pageCount);
+                const footerHeight = 60;
+                if (pageHeight - yPos < footerHeight + margin) {
+                   doc.addPage();
+                   const newPageCount = doc.internal.getNumberOfPages();
+                   for (let i = 1; i <= newPageCount; i++) { doc.setPage(i); doc.text(`Page ${i} of ${newPageCount}`, pageWidth - margin, pageHeight - 20, { align: 'right' });}
+                   doc.setPage(newPageCount);
+                }
+                doc.setFillColor(brandColor);
+                doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, 'F');
+                const footerLine1 = `Crafted by Travelverse for ${clientName}.`;
+                const footerLine2 = `Where every journey is designed around your vibe.`;
+                doc.setFontSize(10).setFont('Helvetica', 'bold').setTextColor('#FFFFFF');
+                doc.text(footerLine1, pageWidth / 2, pageHeight - footerHeight + 28, { align: 'center' });
+                doc.setFontSize(9).setFont('Helvetica', 'normal');
+                doc.text(footerLine2, pageWidth / 2, pageHeight - footerHeight + 45, { align: 'center' });
+                
+                const fileName = `Itinerary_${isClientPDF ? 'Client' : 'Business'}_${clientName.replace(/\s/g, '_')}_${formatDateToDDMMYYYY(startDate)}.pdf`;
+                doc.save(fileName);
+
+                         } catch (error) {
+                 console.error("An unexpected error occurred during PDF generation:", error);
+                 alert("An unexpected error occurred while creating the PDF. Check the console for details.");
+             }
+         }
+
+        // --- ADVANCED FEATURES ---
+
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.querySelector('.theme-toggle .icon');
+            const currentTheme = body.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                body.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+                showToast('Light mode enabled', 'success');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+                showToast('Dark mode enabled', 'success');
+            }
+        }
+
+        // Loading States
+        function showLoading(message = 'Loading...') {
+            document.getElementById('loadingText').textContent = message;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || icons.info}</span>
+                <span>${message}</span>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+
+
+        function clearAllData() {
+            flights = [];
+            trains = [];
+            buses = [];
+            transfers = [];
+            hotels = [];
+            activities = [];
+            places = [];
+            
+            // Clear form fields
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientEmail').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('country').value = '';
+            document.getElementById('marginCost').value = '';
+            
+            // Clear all other form fields
+            const formFields = ['airline', 'departure', 'arrival', 'flightDate', 'flightCost', 'flightDescription',
+                               'trainName', 'trainDate', 'trainTime', 'trainDescription', 'trainCost',
+                               'busName', 'busDate', 'busDescription', 'busCost',
+                               'transferName', 'transferCost',
+                               'hotelName', 'hotelLocation', 'roomCategory', 'checkIn', 'checkOut', 'hotelCost',
+                               'activityName', 'activityLocation', 'activityDate', 'activityCost', 'activityDescription'];
+            
+            formFields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element) element.value = '';
+            });
+        }
+
+        // Calendar View
+        let currentCalendarDate = new Date();
+        let calendarVisible = false;
+
+        function toggleCalendarView() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarVisible = !calendarVisible;
+            
+            if (calendarVisible) {
+                calendarGrid.style.display = 'grid';
+                renderCalendar();
+            } else {
+                calendarGrid.style.display = 'none';
+            }
+        }
+
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const monthYear = document.getElementById('calendarMonth');
+            
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            monthYear.textContent = currentCalendarDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long' 
+            });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            let calendarHTML = '';
+            
+            // Add day headers
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            days.forEach(day => {
+                calendarHTML += `<div class="calendar-day" style="background: var(--brand-blue); color: white; text-align: center; font-weight: bold; min-height: 40px; display: flex; align-items: center; justify-content: center;">${day}</div>`;
+            });
+            
+            // Add calendar days
+            for (let i = 0; i < 42; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+                
+                const isCurrentMonth = currentDate.getMonth() === month;
+                const isToday = currentDate.toDateString() === new Date().toDateString();
+                const hasEvents = hasEventsOnDate(currentDate);
+                
+                let dayClass = 'calendar-day';
+                if (isToday) dayClass += ' today';
+                if (hasEvents) dayClass += ' has-events';
+                if (!isCurrentMonth) dayClass += ' other-month';
+                
+                const dayEvents = getEventsForDate(currentDate);
+                
+                calendarHTML += `
+                    <div class="${dayClass}" onclick="selectDate('${currentDate.toISOString().split('T')[0]}')">
+                        <div class="day-number">${currentDate.getDate()}</div>
+                        <div class="day-events">
+                            ${dayEvents.map(event => `<span class="event-dot"></span>${event}`).join('<br>')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            calendarGrid.innerHTML = calendarHTML;
+        }
+
+        function hasEventsOnDate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            return flights.some(f => f.flightDate === dateStr) ||
+                   trains.some(t => t.date === dateStr) ||
+                   buses.some(b => b.date === dateStr) ||
+                   hotels.some(h => h.checkIn === dateStr || h.checkOut === dateStr) ||
+                   activities.some(a => a.activityDate === dateStr);
+        }
+
+        function getEventsForDate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            const events = [];
+            
+            flights.filter(f => f.flightDate === dateStr).forEach(f => events.push(`✈️ ${f.airline}`));
+            trains.filter(t => t.date === dateStr).forEach(t => events.push(`🚆 ${t.name}`));
+            buses.filter(b => b.date === dateStr).forEach(b => events.push(`🚌 ${b.name}`));
+            hotels.filter(h => h.checkIn === dateStr).forEach(h => events.push(`🏨 Check-in`));
+            hotels.filter(h => h.checkOut === dateStr).forEach(h => events.push(`🏨 Check-out`));
+            activities.filter(a => a.activityDate === dateStr).forEach(a => events.push(`🏞️ ${a.activityName}`));
+            
+            return events.slice(0, 3); // Limit to 3 events per day
+        }
+
+        function selectDate(dateStr) {
+            // Auto-fill date fields based on context
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.type === 'date') {
+                activeElement.value = dateStr;
+                activeElement.dispatchEvent(new Event('change'));
+            }
+        }
+
+        function previousMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        // Share Functions
+        function shareViaEmail() {
+            const clientName = document.getElementById('clientName').value;
+            const clientEmail = document.getElementById('clientEmail').value;
+            
+            if (!clientName || !clientEmail) {
+                showToast('Please fill in client name and email first', 'warning');
+                return;
+            }
+            
+            const subject = encodeURIComponent(`Travel Itinerary for ${clientName} - Travelverse`);
+            const body = encodeURIComponent(`Dear ${clientName},\n\nPlease find your travel itinerary attached.\n\nBest regards,\nTravelverse Team`);
+            
+            const mailtoLink = `mailto:${clientEmail}?subject=${subject}&body=${body}`;
+            window.open(mailtoLink);
+            
+            showToast('Email client opened', 'success');
+        }
+
+        function shareViaWhatsApp() {
+            const clientName = document.getElementById('clientName').value;
+            const country = document.getElementById('country').value;
+            
+            if (!clientName || !country) {
+                showToast('Please fill in client name and country first', 'warning');
+                return;
+            }
+            
+            const message = encodeURIComponent(`Hi ${clientName}! Your ${country} travel itinerary is ready. Please check your email for the detailed PDF. 🗺️✈️`);
+            const whatsappLink = `https://wa.me/?text=${message}`;
+            
+            window.open(whatsappLink, '_blank');
+            showToast('WhatsApp share opened', 'success');
+        }
+
+        function exportToGoogleCalendar() {
+            const events = [];
+            
+            // Add flights
+            flights.forEach(flight => {
+                events.push({
+                    title: `✈️ Flight: ${flight.airline} (${flight.departure} → ${flight.arrival})`,
+                    start: flight.flightDate,
+                    description: flight.flightDescription || 'Flight details'
+                });
+            });
+            
+            // Add hotels
+            hotels.forEach(hotel => {
+                events.push({
+                    title: `🏨 Check-in: ${hotel.hotelName}`,
+                    start: hotel.checkIn,
+                    description: `${hotel.hotelLocation} - ${hotel.roomCategory}`
+                });
+                events.push({
+                    title: `🏨 Check-out: ${hotel.hotelName}`,
+                    start: hotel.checkOut,
+                    description: `${hotel.hotelLocation} - ${hotel.roomCategory}`
+                });
+            });
+            
+            // Add activities
+            activities.forEach(activity => {
+                events.push({
+                    title: `🏞️ ${activity.activityName}`,
+                    start: activity.activityDate,
+                    description: `${activity.activityLocation} - ${activity.activityDescription}`
+                });
+            });
+            
+            if (events.length === 0) {
+                showToast('No events to export', 'warning');
+                return;
+            }
+            
+            // Create Google Calendar URL
+            const baseUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+            const firstEvent = events[0];
+            const url = `${baseUrl}&text=${encodeURIComponent(firstEvent.title)}&dates=${firstEvent.start}/${firstEvent.start}&details=${encodeURIComponent(firstEvent.description)}`;
+            
+            window.open(url, '_blank');
+            showToast('Google Calendar opened', 'success');
+        }
+
+        // Flight API Integration (Demo)
+        // Flight API Data
+        const airlines = [
+            'Air India', 'IndiGo', 'Vistara', 'AirAsia India', 'SpiceJet', 'GoAir',
+            'Emirates', 'Qatar Airways', 'Etihad Airways', 'Lufthansa', 'British Airways',
+            'Air France', 'KLM', 'Singapore Airlines', 'Cathay Pacific', 'Thai Airways',
+            'Malaysia Airlines', 'Japan Airlines', 'ANA', 'Korean Air', 'China Airlines',
+            'United Airlines', 'Delta Air Lines', 'American Airlines', 'Southwest Airlines',
+            'JetBlue Airways', 'Alaska Airlines', 'Spirit Airlines', 'Frontier Airlines'
+        ];
+
+        const cities = [
+            'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Ahmedabad',
+            'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio',
+            'London', 'Paris', 'Berlin', 'Madrid', 'Rome', 'Amsterdam', 'Vienna', 'Prague', 'Budapest',
+            'Tokyo', 'Osaka', 'Seoul', 'Beijing', 'Shanghai', 'Hong Kong', 'Singapore', 'Bangkok',
+            'Dubai', 'Abu Dhabi', 'Doha', 'Istanbul', 'Cairo', 'Nairobi', 'Johannesburg', 'Cape Town',
+            'Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Auckland', 'Wellington'
+        ];
+
+        let selectedFlightIndex = -1;
+        let currentFlightResults = [];
+
+        function searchAirlines(query) {
+            const suggestions = airlines.filter(airline => 
+                airline.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 5);
+            
+            const dropdown = document.getElementById('airlineSuggestions');
+            dropdown.innerHTML = '';
+            
+            if (suggestions.length > 0 && query.length > 0) {
+                suggestions.forEach(airline => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `
+                        <div class="suggestion-text">${airline}</div>
+                    `;
+                    item.onclick = () => {
+                        document.getElementById('airline').value = airline;
+                        dropdown.style.display = 'none';
+                    };
+                    dropdown.appendChild(item);
+                });
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function searchCities(query, type) {
+            const suggestions = cities.filter(city => 
+                city.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 5);
+            
+            const dropdown = document.getElementById(type + 'Suggestions');
+            dropdown.innerHTML = '';
+            
+            if (suggestions.length > 0 && query.length > 0) {
+                suggestions.forEach(city => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `
+                        <div class="suggestion-text">${city}</div>
+                        <div class="suggestion-subtext">City</div>
+                    `;
+                    item.onclick = () => {
+                        document.getElementById(type).value = city;
+                        dropdown.style.display = 'none';
+                    };
+                    dropdown.appendChild(item);
+                });
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.suggestion-container')) {
+                document.querySelectorAll('.suggestions-dropdown').forEach(dropdown => {
+                    dropdown.style.display = 'none';
+                });
+            }
+        });
+
+        function searchFlights() {
+            const departure = document.getElementById('departure').value;
+            const arrival = document.getElementById('arrival').value;
+            const flightDate = document.getElementById('flightDate').value;
+            
+            if (!departure || !arrival || !flightDate) {
+                showToast('Please fill in departure, arrival, and date first', 'warning');
+                return;
+            }
+            
+            showLoading('Searching flights...');
+            
+            // Simulate API call
+            setTimeout(() => {
+                const mockFlights = [
+                    {
+                        airline: 'Air India',
+                        departure: departure,
+                        arrival: arrival,
+                        flightDate: flightDate,
+                        flightCost: Math.floor(Math.random() * 30000) + 20000,
+                        flightDescription: 'Direct flight, 25kg baggage'
+                    },
+                    {
+                        airline: 'IndiGo',
+                        departure: departure,
+                        arrival: arrival,
+                        flightDate: flightDate,
+                        flightCost: Math.floor(Math.random() * 25000) + 15000,
+                        flightDescription: '1 stop, 20kg baggage'
+                    },
+                    {
+                        airline: 'Vistara',
+                        departure: departure,
+                        arrival: arrival,
+                        flightDate: flightDate,
+                        flightCost: Math.floor(Math.random() * 35000) + 25000,
+                        flightDescription: 'Direct flight, 30kg baggage'
+                    },
+                    {
+                        airline: 'Emirates',
+                        departure: departure,
+                        arrival: arrival,
+                        flightDate: flightDate,
+                        flightCost: Math.floor(Math.random() * 40000) + 30000,
+                        flightDescription: 'Premium economy, 30kg baggage'
+                    },
+                    {
+                        airline: 'Qatar Airways',
+                        departure: departure,
+                        arrival: arrival,
+                        flightDate: flightDate,
+                        flightCost: Math.floor(Math.random() * 45000) + 35000,
+                        flightDescription: 'Business class, 40kg baggage'
+                    }
+                ];
+                
+                currentFlightResults = mockFlights;
+                selectedFlightIndex = -1;
+                
+                hideLoading();
+                showFlightResults(mockFlights);
+            }, 2000);
+        }
+
+        function showFlightResults(flights) {
+            const modal = document.getElementById('flightResultsModal');
+            const list = document.getElementById('flightResultsList');
+            
+            list.innerHTML = flights.map((flight, index) => `
+                <div class="flight-result-item" onclick="selectFlightItem(${index})">
+                    <div class="flight-header">
+                        <div class="flight-airline">${flight.airline}</div>
+                        <div class="flight-price">₹${flight.flightCost.toLocaleString()}</div>
+                    </div>
+                    <div class="flight-details">
+                        <div class="flight-route">${flight.departure}</div>
+                        <div class="flight-arrow">→</div>
+                        <div class="flight-route">${flight.arrival}</div>
+                    </div>
+                    <div class="flight-description">${flight.flightDescription}</div>
+                </div>
+            `).join('');
+            
+            modal.style.display = 'flex';
+        }
+
+        function selectFlightItem(index) {
+            // Remove previous selection
+            document.querySelectorAll('.flight-result-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            document.querySelectorAll('.flight-result-item')[index].classList.add('selected');
+            selectedFlightIndex = index;
+        }
+
+        function selectFlight() {
+            if (selectedFlightIndex === -1) {
+                showToast('Please select a flight first', 'warning');
+                return;
+            }
+            
+            const selectedFlight = currentFlightResults[selectedFlightIndex];
+            
+            // Auto-fill the form
+            document.getElementById('airline').value = selectedFlight.airline;
+            document.getElementById('flightCost').value = selectedFlight.flightCost;
+            document.getElementById('flightDescription').value = selectedFlight.flightDescription;
+            
+            closeFlightResults();
+            showToast(`Selected ${selectedFlight.airline} flight!`, 'success');
+        }
+
+        function closeFlightResults() {
+            document.getElementById('flightResultsModal').style.display = 'none';
+        }
+
+        // Progress Indicator Functions
+        function updateProgress() {
+            const steps = [
+                { id: 'step1', condition: () => isTravelerDetailsComplete() },
+                { id: 'step2', condition: () => isFlightsComplete() },
+                { id: 'step3', condition: () => isHotelsComplete() },
+                { id: 'step4', condition: () => isActivitiesComplete() },
+                { id: 'step5', condition: () => isTransportComplete() },
+                { id: 'step6', condition: () => isItineraryGenerated() }
+            ];
+
+            let completedSteps = 0;
+            let currentStepIndex = -1;
+
+            steps.forEach((step, index) => {
+                const stepElement = document.getElementById(step.id);
+                const isCompleted = step.condition();
+                const isCurrent = !isCompleted && currentStepIndex === -1;
+
+                if (isCompleted) {
+                    completedSteps++;
+                    stepElement.classList.remove('current');
+                    stepElement.classList.add('completed');
+                } else if (isCurrent) {
+                    currentStepIndex = index;
+                    stepElement.classList.remove('completed');
+                    stepElement.classList.add('current');
+                } else {
+                    stepElement.classList.remove('completed', 'current');
+                }
+            });
+
+            // Calculate percentage
+            const percentage = Math.round((completedSteps / steps.length) * 100);
+            document.getElementById('progressPercentage').textContent = `${percentage}%`;
+            document.getElementById('progressFill').style.width = `${percentage}%`;
+
+            // Show completion message
+            if (percentage === 100) {
+                showToast('🎉 Itinerary planning complete!', 'success');
+            }
+        }
+
+        function isTravelerDetailsComplete() {
+            const clientName = document.getElementById('clientName').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const country = document.getElementById('country').value.trim();
+            return clientName && startDate && endDate && country;
+        }
+
+        function isFlightsComplete() {
+            return flights.length > 0;
+        }
+
+        function isHotelsComplete() {
+            return hotels.length > 0;
+        }
+
+        function isActivitiesComplete() {
+            return activities.length > 0;
+        }
+
+        function isTransportComplete() {
+            return trains.length > 0 || buses.length > 0 || transfers.length > 0;
+        }
+
+        function isItineraryGenerated() {
+            return !document.getElementById('itinerary').classList.contains('hidden');
+        }
+
+        // Add progress tracking to existing functions
+        function addFlight() {
+            const data = { airline: document.getElementById("airline").value.trim(), departure: document.getElementById("departure").value.trim(), arrival: document.getElementById("arrival").value.trim(), flightDate: document.getElementById("flightDate").value, flightCost: parseFloat(document.getElementById("flightCost").value) || 0, flightDescription: document.getElementById("flightDescription").value.trim() };
+            if (!data.airline || !data.departure || !data.arrival || !data.flightDate) { return displayError("Please fill all required flight details."); }
+            flights.push(data);
+            saveData();
+            if(!document.getElementById('itinerary').classList.contains('hidden')) generateItinerary();
+            resetFlightForm();
+            updateProgress();
+        }
+
+        function addHotel() {
+            const data = { hotelName: document.getElementById("hotelName").value.trim(), hotelLocation: document.getElementById("hotelLocation").value.trim(), roomCategory: document.getElementById("roomCategory").value.trim(), checkIn: document.getElementById("checkIn").value, checkOut: document.getElementById("checkOut").value, hotelCost: parseFloat(document.getElementById("hotelCost").value) || 0 };
+            if (!data.hotelName || !data.hotelLocation || !data.checkIn || !data.checkOut) { return displayError("Please fill all required hotel details."); }
+            hotels.push(data);
+            saveData();
+            if(!document.getElementById('itinerary').classList.contains('hidden')) generateItinerary();
+            resetHotelForm();
+            updateProgress();
+        }
+
+        function addActivity() {
+            const data = { activityName: document.getElementById("activityName").value.trim(), activityLocation: document.getElementById("activityLocation").value.trim(), activityDate: document.getElementById("activityDate").value, activityCost: parseFloat(document.getElementById("activityCost").value) || 0, activityDescription: document.getElementById("activityDescription").value.trim() };
+            if (!data.activityName || !data.activityLocation || !data.activityDate) { return displayError("Please fill all required activity details."); }
+            activities.push(data);
+            saveData();
+            if(!document.getElementById('itinerary').classList.contains('hidden')) generateItinerary();
+            resetActivityForm();
+            updateProgress();
+        }
+
+        function addTrain() {
+            const data = { name: document.getElementById("trainName").value.trim(), date: document.getElementById("trainDate").value, time: document.getElementById("trainTime").value, description: document.getElementById("trainDescription").value.trim(), trainCost: parseFloat(document.getElementById("trainCost").value) || 0 };
+            if (!data.name || !data.date) { return displayError("Please fill Train Name and Date."); }
+            trains.push(data);
+            saveData();
+            if(!document.getElementById("itinerary").classList.contains('hidden')) generateItinerary();
+            resetTrainForm();
+            updateProgress();
+        }
+
+        function addBus() {
+            const data = { name: document.getElementById("busName").value.trim(), date: document.getElementById("busDate").value, busCost: parseFloat(document.getElementById("busCost").value) || 0, busDescription: document.getElementById("busDescription").value.trim() };
+            if (!data.name || !data.date) { return displayError("Please fill Bus Name and Date."); }
+            buses.push(data);
+            saveData();
+            if(!document.getElementById("itinerary").classList.contains('hidden')) generateItinerary();
+            resetBusForm();
+            updateProgress();
+        }
+
+        function addTransfer() {
+            const data = { name: document.getElementById("transferName").value.trim(), type: document.getElementById("transferType").value, transferCost: parseFloat(document.getElementById("transferCost").value) || 0 };
+            if (!data.name) { return displayError("Please fill Transfer Name."); }
+            transfers.push(data);
+            saveData();
+            if(!document.getElementById("itinerary").classList.contains('hidden')) generateItinerary();
+            resetTransferForm();
+            updateProgress();
+        }
+
+        // Update progress when form fields change
+        function initializeProgressTracking() {
+            const fieldsToTrack = [
+                'clientName', 'startDate', 'endDate', 'country',
+                'airline', 'departure', 'arrival', 'flightDate',
+                'hotelName', 'hotelLocation', 'checkIn', 'checkOut',
+                'activityName', 'activityLocation', 'activityDate',
+                'trainName', 'trainDate', 'busName', 'busDate',
+                'transferName'
+            ];
+
+            fieldsToTrack.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', updateProgress);
+                    field.addEventListener('change', updateProgress);
+                }
+            });
+        }
+
+        // Enhanced loadData function
+        function loadData() {
+            const savedData = localStorage.getItem('travelItineraryData');
+            const savedTheme = localStorage.getItem('theme');
+            
+            // Load theme
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.querySelector('.theme-toggle .icon').textContent = '☀️';
+            }
+            
+            const data = savedData ? JSON.parse(savedData) : {};
+            
+            document.getElementById("clientName").value = data.clientName || '';
+            document.getElementById("clientEmail").value = data.clientEmail || '';
+            document.getElementById("startDate").value = data.startDate || '';
+            document.getElementById("endDate").value = data.endDate || '';
+            document.getElementById("country").value = data.country || '';
+            document.getElementById("adults").value = data.adults || '1';
+            document.getElementById("kids").value = data.kids || '0';
+            document.getElementById("marginCost").value = data.marginCost || '';
+            places = data.places || [];
+            flights = data.flights || [];
+            trains = data.trains || [];
+            buses = data.buses || [];
+            transfers = data.transfers || [];
+            hotels = data.hotels || [];
+            activities = data.activities || [];
+            
+            // Initialize inclusions and exclusions with defaults if not present
+            if (!data.inclusions || data.inclusions.length === 0) {
+                inclusions = predefinedInclusions.map(text => ({ text, checked: true, custom: false }));
+            } else {
+                inclusions = data.inclusions;
+            }
+            
+            if (!data.exclusions || data.exclusions.length === 0) {
+                exclusions = predefinedExclusions.map(text => ({ text, checked: true, custom: false }));
+            } else {
+                exclusions = data.exclusions;
+            }
+
+            renderInclusionsExclusions();
+            initializeDateLogic(); 
+            updateKidsAges();
+            renderPlaces();
+
+            if (data.clientName) { generateItinerary(); }
+        }
+
+        window.onload = loadData;
+    </script>
+
+ </body></html>
